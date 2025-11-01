@@ -1,12 +1,11 @@
-import './App.css'
+import Deck from "./Components/Deck";
 
 function App() {
-
   return (
     <>
-      <div className='text-3xl font-bold underline'>Hello World</div>
+      <Deck />
     </>
   )
 }
 
-export default App
+export default App;
