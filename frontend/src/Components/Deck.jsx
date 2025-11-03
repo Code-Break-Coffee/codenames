@@ -1,5 +1,8 @@
+// Deck.jsx
 import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
+import Teams from "./Teams";
+import ClueInput from "./ClueInput"; // Import the new component
 
 const Deck = () => {
 
@@ -33,19 +36,33 @@ const Deck = () => {
 
   return (
     <>
-      <div className="relative w-screen h-screen dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200">
-        <div className="p-8 gap-5 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
-          {cards.length > 0 ? (
-            cards.map((card, index) => (
-              <DeckCard
-                key={index}
-                word={card.word}
-                team={card.team}
-              />
-            ))
-          ) : (
-            <></>
-          )}
+      {/* Outer container remains full screen and relative */}
+      <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200">
+        
+        {/* Teams are absolutely positioned and don't affect main layout */}
+        <Teams /> 
+
+        {/* New Inner Flex Container: Column layout to stack deck and clue input */}
+        <div className="flex flex-col items-center justify-center">
+            
+          {/* Deck/Board Container - Height slightly shortened to 600px */}
+          <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
+            {cards.length > 0 ? (
+              cards.map((card, index) => (
+                <DeckCard
+                  key={index}
+                  word={card.word}
+                  team={card.team}
+                />
+              ))
+            ) : (
+              <></>
+            )}
+          </div>
+          
+          {/* Clue Input Component - Placed right below the deck */}
+          <ClueInput />
+          
         </div>
         
         <ThemeToggle />
