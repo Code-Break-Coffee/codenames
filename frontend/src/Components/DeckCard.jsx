@@ -1,4 +1,4 @@
-export function DeckCard({ word, team }) {
+export function DeckCard({ word, team, click }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
@@ -42,6 +42,7 @@ export function DeckCard({ word, team }) {
       <div className={`absolute -inset-1 ${style.bg} rounded-[10px] blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
       
       <div
+        onClick={click}
         className={`
           relative w-full h-full rounded-[10px] border-2
           transform transition-all duration-500 ease-out

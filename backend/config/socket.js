@@ -1,4 +1,4 @@
-const { handleSocketEvents } = require('../controllers/socketController');
+const { handleSocketEvents } = require('../controllers/operativesController');
 
 function socketConnection(io) {
   io.on('connection', (socket) => {

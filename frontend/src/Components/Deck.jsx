@@ -1,11 +1,12 @@
-// Deck.jsx
+import { useEffect } from "react";
+import axios from "axios";
+import socket from "../socket";
 import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
 import Teams from "./Teams";
-import ClueInput from "./ClueInput"; // Import the new component
+import ClueInput from "./ClueInput";
 
 const Deck = () => {
-
   const cards = [
     { word: "Phoenix", team: "blue" },
     { word: "Dragon", team: "red" },
@@ -34,40 +35,48 @@ const Deck = () => {
     { word: "Assassin", team: "assassin" },
   ];
 
-  return (
-    <>
-      {/* Outer container remains full screen and relative */}
-      <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200">
-        
-        {/* Teams are absolutely positioned and don't affect main layout */}
-        <Teams /> 
+  // Socket event listener
+  useEffect(() => {
+    socket.on("receiveMessage", (data) => {
+      console.log("🎯 Received live message:", data);
+    });
 
-        {/* New Inner Flex Container: Column layout to stack deck and clue input */}
-        <div className="flex flex-col items-center justify-center">
-            
-          {/* Deck/Board Container - Height slightly shortened to 600px */}
-          <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
-            {cards.length > 0 ? (
-              cards.map((card, index) => (
-                <DeckCard
-                  key={index}
-                  word={card.word}
-                  team={card.team}
-                />
-              ))
-            ) : (
-              <></>
-            )}
-          </div>
-          
-          {/* Clue Input Component - Placed right below the deck */}
-          <ClueInput />
-          
+    return () => socket.off("receiveMessage");
+  }, []);
+
+  // When card is clicked
+  const cardClick = async (card) => {
+    try {
+      console.log("Card Clcikd");
+      await axios.post("http://localhost:3000/api/click", { message: `${card.word} clicked` });
+
+      // Real-time event
+      socket.emit("sendMessage", { message: `${card.word} clicked`, team: card.team });
+    } catch (error) {
+      console.error("❌ Error sending message:", error);
+    }
+  };
+
+  return (
+    <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200">
+      <Teams />
+
+      <div className="flex flex-col items-center justify-center">
+        <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
+          {cards.map((card, index) => (
+            <DeckCard
+              key={index}
+              word={card.word}
+              team={card.team}
+              click={() => cardClick(card)}
+            />
+          ))}
         </div>
-        
-        <ThemeToggle />
+        <ClueInput />
       </div>
-    </>
+
+      <ThemeToggle />
+    </div>
   );
 };
 
