@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import socket from "../socket";
 import { DeckCard } from "./DeckCard";
@@ -7,6 +7,7 @@ import Teams from "./Teams";
 import ClueInput from "./ClueInput";
 
 const Deck = () => {
+  const [overlayActive, setOverlayActive] = useState(false);
   const cards = [
     { word: "Phoenix", team: "blue" },
     { word: "Dragon", team: "red" },
@@ -35,30 +36,43 @@ const Deck = () => {
     { word: "Assassin", team: "assassin" },
   ];
 
-  // Socket event listener
   useEffect(() => {
     socket.on("receiveMessage", (data) => {
-      console.log("🎯 Received live message:", data);
+      console.log("Received live message:", data);
+    });
+    socket.on("clueReceived", (clueData) => {
+      console.log("🧩 Clue received:", clueData);
+      setOverlayActive(true);
+      setTimeout(() => setOverlayActive(false), 3000);
     });
 
-    return () => socket.off("receiveMessage");
+    return () => {
+      socket.off("receiveMessage");
+      socket.off("clueReceived");
+    };
   }, []);
 
-  // When card is clicked
+  const handleClueSubmit = (clueData) => {
+    console.log("Clue submitted:", clueData);
+    setOverlayActive(true);
+
+    // Hide overlay after animation duration (e.g., 3 seconds)
+    setTimeout(() => setOverlayActive(false), 3000);
+  };
+
   const cardClick = async (card) => {
     try {
-      console.log("Card Clcikd");
       await axios.post("http://localhost:3000/api/click", { message: `${card.word} clicked` });
-
-      // Real-time event
       socket.emit("sendMessage", { message: `${card.word} clicked`, team: card.team });
     } catch (error) {
-      console.error("❌ Error sending message:", error);
+      console.error("Error sending message:", error);
     }
   };
 
   return (
-    <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200">
+    <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">
+
+      {/* Overlay animation for clue submission (shown to all on broadcast) */}
       <Teams />
 
       <div className="flex flex-col items-center justify-center">
@@ -72,10 +86,17 @@ const Deck = () => {
             />
           ))}
         </div>
-        <ClueInput />
+        <ClueInput onClueSubmit={handleClueSubmit} />
       </div>
 
       <ThemeToggle />
+
+      {/* Overlay animation */}
+      {overlayActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
+          <h1 className="text-4xl font-bold text-white animate-pulse">Clue Submitted!</h1>
+        </div>
+      )}
     </div>
   );
 };
