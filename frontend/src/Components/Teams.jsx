@@ -1,7 +1,10 @@
-// Teams.jsx
-import React from 'react';
-
-const PlayerList = ({ team, title, players, colorClasses }) => (
+const PlayerList = ({ team, title, players, colorClasses }) =>{
+  const handleJoin=(teamJoin, titleJoin) =>
+  {
+    // console.log(`Joined as ${titleJoin} in team ${teamJoin}`);
+    
+  }
+  return (
   <div className="mb-6">
     <h4 className={`text-md font-semibold mb-2 border-b pb-1 border-sidebar-border/50 ${colorClasses.text}`}>
       {title}
@@ -30,12 +33,12 @@ const PlayerList = ({ team, title, players, colorClasses }) => (
         shadow-md ${colorClasses.shadow}
       `}
       // A simple placeholder click handler
-      onClick={() => console.log(`Joining ${title} for ${team} team`)} 
+      onClick={() => handleJoin(team, title)} 
     >
       Join {title}
     </button>
   </div>
-);
+)};
 
 
 const TeamPanel = ({ team, score, concealers, revealers }) => {
@@ -90,6 +93,7 @@ const TeamPanel = ({ team, score, concealers, revealers }) => {
 };
 
 const Teams = () => {
+
   const redTeam = {
     score: 8,
     concealers: ['Viper', 'Blaze'],
