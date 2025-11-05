@@ -36,6 +36,13 @@ export default {
     // Border classes
     'border-blue-400/30',
     'border-red-400/30',
+
+    'perspective',
+    'card-inner',
+    'card-face',
+    'card-front',
+    'card-back',
+    'flipped',
   ],
   
   plugins: [],

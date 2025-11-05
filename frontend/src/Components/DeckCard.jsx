@@ -1,4 +1,6 @@
-export function DeckCard({ word, team, click }) {
+import React from 'react';
+
+export function DeckCard({ word, team, click, revealed = false, pending = false }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
@@ -34,15 +36,27 @@ export function DeckCard({ word, team, click }) {
     }
   };
 
-  const style = teamStyles[team];
+  const defaultStyle = {
+    bg: 'bg-gradient-to-br from-amber-100 via-amber-50 to-yellow-50 dark:from-amber-900/40 dark:via-amber-800/30 dark:to-yellow-900/40',
+    border: 'border-amber-200/50 dark:border-amber-700/30',
+    shadow: 'shadow-xl shadow-amber-200/40 dark:shadow-amber-900/40',
+    glow: 'group-hover:shadow-amber-300/50 dark:group-hover:shadow-amber-800/50',
+    text: 'text-amber-900 dark:text-amber-100',
+    shine: 'from-amber-200/0 via-amber-100/40 to-amber-200/0 dark:from-amber-700/0 dark:via-amber-600/20 dark:to-amber-700/0'
+  };
+
+  const style = revealed ? teamStyles[team] : defaultStyle;
+
+  // classes for animation
+  const animClass = pending ? 'animate-card-flip' : '';
+  const revealedClass = revealed ? 'revealed-card' : '';
 
   return (
-    <div className="group relative w-full h-full">
-      {/* Card glow */}
+    <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
+      {/* background glow (kept) */}
       <div className={`absolute -inset-1 ${style.bg} rounded-[10px] blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
       
       <div
-        onClick={click}
         className={`
           relative w-full h-full rounded-[10px] border-2
           transform transition-all duration-500 ease-out
@@ -52,7 +66,7 @@ export function DeckCard({ word, team, click }) {
           ${style.shadow} ${style.glow}
         `}
       >
-        {/* Geometric pattern overlay - Net structure */}
+        {/* Geometric pattern overlay */}
         <div className="absolute inset-0 opacity-10">
           <div 
             className="w-full h-full"
@@ -69,7 +83,7 @@ export function DeckCard({ word, team, click }) {
         {/* Corner accents */}
         <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-current opacity-30 rounded-tl" />
         <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-current opacity-30 rounded-br" />
-        
+
         {/* Top gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/20" />
 
@@ -95,8 +109,8 @@ export function DeckCard({ word, team, click }) {
 
         {/* Bottom highlight */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        
-        {/* Vignette effect */}
+
+        {/* Vignette */}
         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] rounded-[10px] pointer-events-none" />
       </div>
     </div>
