@@ -45,11 +45,14 @@ const initialState = {
 // thunk to perform network/socket work; call this after animation
 export const clickCard = createAsyncThunk(
   'cards/clickCard',
-  async ({ id, word, team }, { rejectWithValue }) => {
+  async ({ id, word, team, gameId }, { rejectWithValue }) => {
     try {
-      await axios.post('http://localhost:3000/api/click', { message: `${word} clicked` });
+      // send the exact payload your server expects
+      const res = await axios.post('http://localhost:3000/api/click', { gameId, word });
+
+      // optionally use server response (res.data) if you want to sync board/scores
       socket.emit('sendMessage', { message: `${word} clicked`, team });
-      return { id };
+      return { id }; // keep existing reducer logic which marks the card revealed locally
     } catch (err) {
       console.error('clickCard error', err);
       return rejectWithValue(err.response?.data || err.message);
