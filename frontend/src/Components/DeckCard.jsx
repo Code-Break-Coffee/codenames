@@ -45,7 +45,16 @@ export function DeckCard({ word, team, click, revealed = false, pending = false 
     shine: 'from-amber-200/0 via-amber-100/40 to-amber-200/0 dark:from-amber-700/0 dark:via-amber-600/20 dark:to-amber-700/0'
   };
 
-  const style = revealed ? teamStyles[team] : defaultStyle;
+  let style;
+  if (revealed) {
+    style = teamStyles[team];
+    if (!style) {
+      console.warn(`DeckCard: Unknown or missing team '${team}' for word '${word}'. Using fallback style.`);
+      style = defaultStyle;
+    }
+  } else {
+    style = defaultStyle;
+  }
 
   // classes for animation
   const animClass = pending ? 'animate-card-flip' : '';
