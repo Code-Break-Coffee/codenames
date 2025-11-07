@@ -46,20 +46,29 @@ const Deck = () => {
     // reveal immediately (optimistic UI)
     setTimeout(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
-      dispatch(clickCard({ id: card.id, word: card.word, team: card.team }));
+      dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
     }, ANIMATION_DURATION);
   };
 
 
   useEffect(() => {
     async function fetchBoard() {
-      try {
-        const res = await axios.get(`http://localhost:3000/api/cards/${gameId}`);
-        dispatch(setCards(res.data.board)); 
-      } catch (err) {
-        console.error("Failed to fetch game:", err);
-      }
-    }
+  try {
+    const res = await axios.get(`http://localhost:3000/api/cards/${gameId}`);
+    const normalized = (res.data.board || []).map((c, i) => ({
+      // keep server _id if present, otherwise fallback to index
+      id: c._id ?? i,
+      word: c.word,
+      team: c.type ?? c.team ?? 'neutral',   // map server "type" -> "team"
+      revealed: c.revealed ?? false,
+      // keep raw fields if you need them
+      _raw: c,
+    }));
+    dispatch(setCards(normalized));
+  } catch (err) {
+    console.error("Failed to fetch game:", err);
+  }
+}
 
     fetchBoard();
   }, [gameId, dispatch]);
