@@ -7,11 +7,15 @@ import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
 import Teams from "./Teams";
 import ClueInput from "./ClueInput";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { setCards } from "../store/slices/cardsSlice";
 
 const ANIMATION_DURATION = 600; // ms - match CSS animation length
 
 const Deck = () => {
   const dispatch = useDispatch();
+  const { gameId } = useParams(); 
   const cards = useSelector((state) => state.cards?.cards ?? []);
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
 
@@ -39,15 +43,30 @@ const Deck = () => {
     // set pending (this will cause DeckCard to play animation)
     dispatch(setPendingReveal({ id: card.id, pending: true }));
 
-    // after animation completes, call thunk to perform network & set revealed
+    // reveal immediately (optimistic UI)
     setTimeout(() => {
+      dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team }));
     }, ANIMATION_DURATION);
   };
 
+
+  useEffect(() => {
+    async function fetchBoard() {
+      try {
+        const res = await axios.get(`http://localhost:3000/api/cards/${gameId}`);
+        dispatch(setCards(res.data.board)); 
+      } catch (err) {
+        console.error("Failed to fetch game:", err);
+      }
+    }
+
+    fetchBoard();
+  }, [gameId, dispatch]);
+
   return (
     <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">
-      <Teams />
+      <Teams/>
       <div className="flex flex-col items-center justify-center">
         <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
           {cards.map((card) => (

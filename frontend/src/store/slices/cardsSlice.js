@@ -81,7 +81,12 @@ const cardsSlice = createSlice({
       });
     },
     setCards(state, action) {
-      state.cards = action.payload.map((c, i) => ({ ...c, id: i, revealed: false, pendingReveal: false }));
+      state.cards = action.payload.map((c, i) => ({
+        ...c,
+        id: i,
+        revealed: c.revealed ?? false,
+        pendingReveal: false
+      }));
     },
   },
   extraReducers: (builder) => {
