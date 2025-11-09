@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clickCard, setPendingReveal } from "../store/slices/cardsSlice";
-import { showOverlay, hideOverlay } from "../store/slices/uiSlice";
+import { showOverlay, hideOverlay, setConfirmTarget, clearConfirmTarget } from "../store/slices/uiSlice";
 import socket from "../socket";
 import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
@@ -15,9 +15,10 @@ const ANIMATION_DURATION = 600; // ms - match CSS animation length
 
 const Deck = () => {
   const dispatch = useDispatch();
-  const { gameId } = useParams(); 
+  const { gameId } = useParams();
   const cards = useSelector((state) => state.cards?.cards ?? []);
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
+  const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
 
   useEffect(() => {
     socket.on("receiveMessage", (data) => console.log("Received live message:", data));
@@ -36,18 +37,22 @@ const Deck = () => {
     setTimeout(() => dispatch(hideOverlay()), 3000);
   };
 
-  const onCardClick = (e, card) => {
+  const onConfirmCardClick=(e,card)=>{
     e.stopPropagation();
-    if (!card || card.revealed || card.pendingReveal) return; // ignore if already revealed or animating
+    if (!card || card.revealed || card.pendingReveal) return;
 
-    // set pending (this will cause DeckCard to play animation)
     dispatch(setPendingReveal({ id: card.id, pending: true }));
 
     // reveal immediately (optimistic UI)
     setTimeout(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
+      dispatch(clearConfirmTarget());
     }, ANIMATION_DURATION);
+  };
+
+  const onCardClick = (cardId) => {
+    confirmTargetId === cardId ? dispatch(clearConfirmTarget()) : dispatch(setConfirmTarget(cardId));
   };
 
 
@@ -83,7 +88,9 @@ const Deck = () => {
               key={card.id}
               word={card.word}
               team={card.team}
-              click={(e) => onCardClick(e, card)}
+              click={() => onCardClick(card.id)}
+              clickConfirm={(e)=> onConfirmCardClick(e,card)}
+              confirmButton={confirmTargetId === card.id}
               revealed={card.revealed}
               pending={card.pendingReveal}
             />

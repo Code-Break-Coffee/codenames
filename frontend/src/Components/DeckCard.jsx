@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function DeckCard({ word, team, click, revealed = false, pending = false }) {
+export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
@@ -62,9 +62,19 @@ export function DeckCard({ word, team, click, revealed = false, pending = false 
 
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
+      {
+        confirmButton ? (
+          <div
+            className='absolute top-[5px] right-[5px] rounded-[50%] w-[20px] h-[20px] bg-green-400 z-20 hover:cursor-pointer'
+            onClick={clickConfirm}
+            title="Confirm Button"
+          >
+            <span className="text-xs font-bold">✓</span>
+          </div>
+        ) : <></>
+      }
       {/* background glow (kept) */}
       <div className={`absolute -inset-1 ${style.bg} rounded-[10px] blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
-      
       <div
         className={`
           relative w-full h-full rounded-[10px] border-2
