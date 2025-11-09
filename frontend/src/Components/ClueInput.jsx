@@ -30,7 +30,7 @@ const ClueInput = ({ onClueSubmit }) => {
 
     const clueData = { word: clueWord, number: clueNumber };
     socket.emit('clueSubmitted', clueData);
-    onClueSubmit?.(clueData); // Notify parent to show overlay
+    onClueSubmit?.(clueData);
   };
 
   return (
