@@ -19,6 +19,13 @@ const Deck = () => {
   const cards = useSelector((state) => state.cards?.cards ?? []);
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
   const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
+  const [joinedTeam, setJoinedTeam] = useState("");
+  const [joinedTitle, setJoinedTitle] = useState("");
+
+  const handleTeamData=(team,title)=>{
+    setJoinedTeam(team);
+    setJoinedTitle(title);
+  }
 
   useEffect(() => {
     socket.on("receiveMessage", (data) => console.log("Received live message:", data));
@@ -80,7 +87,7 @@ const Deck = () => {
 
   return (
     <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">
-      <Teams/>
+      <Teams onDataReceived={handleTeamData}/>
       <div className="flex flex-col items-center justify-center">
         <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
           {cards.map((card) => (
@@ -91,7 +98,7 @@ const Deck = () => {
               click={() => onCardClick(card.id)}
               clickConfirm={(e)=> onConfirmCardClick(e,card)}
               confirmButton={confirmTargetId === card.id}
-              revealed={card.revealed}
+              revealed={joinedTitle === "Concealers" ? true : card.revealed}
               pending={card.pendingReveal}
             />
           ))}
