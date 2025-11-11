@@ -63,7 +63,7 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
       {
-        confirmButton ? (
+        confirmButton && !revealed ? (
           <div
             className='absolute top-[5px] right-[5px] rounded-[50%] w-[20px] h-[20px] bg-green-400 z-20 hover:cursor-pointer'
             onClick={clickConfirm}

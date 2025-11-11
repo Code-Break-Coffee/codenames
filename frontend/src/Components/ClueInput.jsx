@@ -9,7 +9,6 @@ const ClueInput = ({ onClueSubmit }) => {
 
   const numbers = Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `${i + 1}` })).concat({ value: 'infinity', label: '∞' });
 
-  // Ensure we only set up the listener once
   useEffect(() => {
     const onClueReceived = (clueData) => {
       setClueWord(clueData.word);
