@@ -36,7 +36,7 @@ const TeamPanel = ({ team, score, concealers, revealers, joinFunction }) => {
 
       {/* Score Section */}
       <div className="text-center mb-8">
-        <p className="text-lg font-medium text-muted-foreground mb-2">Current Score</p>
+        <p className="text-lg font-medium text-[#717182] mb-2">Cards Left</p>
         <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full border-4 ${colorClasses.border} ${colorClasses.bg} ${colorClasses.headerText} text-4xl font-extrabold shadow-inner`}>
           {score}
         </div>
