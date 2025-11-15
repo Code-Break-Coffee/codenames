@@ -20,7 +20,6 @@ const Teams = ({onDataReceived}) => {
 const redScore = useSelector((state) => state.scores?.red ?? 0);
 const blueScore = useSelector((state) => state.scores?.blue ?? 0);
 
-
   const redTeam = {
     score: redScore,
     concealers: ['Viper', 'Blaze'],
