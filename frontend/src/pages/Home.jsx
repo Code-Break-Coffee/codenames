@@ -142,7 +142,7 @@ const Home = () => {
               onChange={(e) => setGameId(e.target.value.toUpperCase())}
               placeholder="e.g., F3K8P1X"
               className="w-full p-3 border border-border rounded-lg bg-input-background focus:ring-2 focus:ring-ring focus:border-ring transition-all duration-200 text-black uppercase tracking-widest dark:placeholder-gray-400"
-              maxLength={7}
+              maxLength={25}
             />
           </div>
 
