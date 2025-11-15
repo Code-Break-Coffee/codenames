@@ -69,7 +69,7 @@ const Home = () => {
       alert("Please enter a valid Game ID.");
       return;
     }
-    navigate(`/game/${gameId.trim().toUpperCase()}`);
+    navigate(`/game/${gameId.trim()}`);
   };
 
   // Generate unique properties for each floating word
@@ -139,9 +139,9 @@ const Home = () => {
               type="text"
               id="gameId"
               value={gameId}
-              onChange={(e) => setGameId(e.target.value.toUpperCase())}
+              onChange={(e) => setGameId(e.target.value)}
               placeholder="e.g., F3K8P1X"
-              className="w-full p-3 border border-border rounded-lg bg-input-background focus:ring-2 focus:ring-ring focus:border-ring transition-all duration-200 text-black uppercase tracking-widest dark:placeholder-gray-400"
+              className="w-full p-3 border border-border rounded-lg bg-input-background focus:ring-2 focus:ring-ring focus:border-ring transition-all duration-200 text-black tracking-widest dark:placeholder-gray-400"
               maxLength={25}
             />
           </div>
