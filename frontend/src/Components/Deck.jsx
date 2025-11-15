@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { clickCard, setPendingReveal } from "../store/slices/cardsSlice";
+import { clickCard, setPendingReveal, revealLocal } from "../store/slices/cardsSlice";
 import { showOverlay, hideOverlay, setConfirmTarget, clearConfirmTarget } from "../store/slices/uiSlice";
 import socket from "../socket";
 import { DeckCard } from "./DeckCard";
@@ -10,7 +10,7 @@ import ClueInput from "./ClueInput";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { setCards } from "../store/slices/cardsSlice";
-
+import { updateScores } from "../store/slices/scoreSlice";
 const ANIMATION_DURATION = 600; // ms - match CSS animation length
 
 const Deck = () => {
@@ -21,7 +21,6 @@ const Deck = () => {
   const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
   const [joinedTeam, setJoinedTeam] = useState("");
   const [joinedTitle, setJoinedTitle] = useState("");
-
   const handleTeamData=(team,title)=>{
     setJoinedTeam(team);
     setJoinedTitle(title);
@@ -49,11 +48,11 @@ const Deck = () => {
     if (!card || card.revealed || card.pendingReveal) return;
 
     dispatch(setPendingReveal({ id: card.id, pending: true }));
-
     // reveal immediately (optimistic UI)
     setTimeout(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
+      socket.emit("revealCard", { gameId, cardId: card.id }); 
       dispatch(clearConfirmTarget());
     }, ANIMATION_DURATION);
   };
@@ -84,6 +83,30 @@ const Deck = () => {
 
     fetchBoard();
   }, [gameId, dispatch]);
+
+  useEffect(() => {
+    if (!gameId) return;
+    socket.emit("joinGame", gameId);
+  }, [gameId]);
+
+  useEffect(() => {
+    socket.on("cardRevealed", ({ cardId,updated_score }) => {
+      // Trigger animation on other participants' screens
+      dispatch(setPendingReveal({ id: cardId, pending: true }));
+      console.log(updated_score);
+      dispatch(updateScores({
+        red: updated_score.redScore,
+        blue: updated_score.blueScore
+      }));
+      // After animation, reveal the card
+      setTimeout(() => {
+        dispatch(revealLocal({ id: cardId, revealed: true }));
+      }, ANIMATION_DURATION);
+    });
+
+    return () => socket.off("cardRevealed");
+  }, [dispatch]);
+
 
   return (
     <div className="relative w-screen h-screen flex items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">

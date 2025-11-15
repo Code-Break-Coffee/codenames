@@ -1,4 +1,5 @@
 import { createContext, useState } from "react";
+import { useSelector } from "react-redux";
 import TeamPanel from "./TeamPanel";
 export const JoinContext = createContext();
 
@@ -14,14 +15,20 @@ const Teams = ({onDataReceived}) => {
     onDataReceived(teamJoin,titleJoin);
   }
 
+
+  // Get live scores from Redux store
+const redScore = useSelector((state) => state.scores?.red ?? 0);
+const blueScore = useSelector((state) => state.scores?.blue ?? 0);
+
+
   const redTeam = {
-    score: 8,
+    score: redScore,
     concealers: ['Viper', 'Blaze'],
     revealers: ['Shadow', 'Scorch']
   };
 
   const blueTeam = {
-    score: 7,
+    score: blueScore,
     concealers: ['Tide', 'Aqua'],
     revealers: ['Frost', 'Mist']
   };
