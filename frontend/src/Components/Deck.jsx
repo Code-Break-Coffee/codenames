@@ -86,7 +86,19 @@ const Deck = () => {
 
   useEffect(() => {
     if (!gameId) return;
+    console.log("➡️ Emitting joinGame for", gameId);
     socket.emit("joinGame", gameId);
+
+    const onJoined = (data) => console.log('✅ joinedGame ack received from server:', data);
+    const onPlayerJoined = (data) => console.log('👥 another player joined room:', data);
+
+    socket.on('joinedGame', onJoined);
+    socket.on('playerJoined', onPlayerJoined);
+
+    return () => {
+      socket.off('joinedGame', onJoined);
+      socket.off('playerJoined', onPlayerJoined);
+    };
   }, [gameId]);
 
   useEffect(() => {
