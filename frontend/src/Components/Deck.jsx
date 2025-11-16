@@ -105,7 +105,6 @@ const Deck = () => {
     socket.on("cardRevealed", ({ cardId,updated_score }) => {
       // Trigger animation on other participants' screens
       dispatch(setPendingReveal({ id: cardId, pending: true }));
-      console.log(updated_score);
       dispatch(updateScores({
         red: updated_score.redScore,
         blue: updated_score.blueScore

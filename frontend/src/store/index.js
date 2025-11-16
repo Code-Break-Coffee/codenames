@@ -13,10 +13,12 @@ import {
 import storage from 'redux-persist/lib/storage'; // localStorage
 import cardsReducer from './slices/cardsSlice';
 import uiReducer from './slices/uiSlice';
+import scoreReducer from "./slices/scoreSlice";
 
 const rootReducer = combineReducers({
   cards: cardsReducer,
   ui: uiReducer,
+  scores: scoreReducer
 });
 
 const persistConfig = {
