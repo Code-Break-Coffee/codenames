@@ -2,8 +2,19 @@ const Game = require("../model/Game.js");
 
 function handleSocketEvents(io, socket) {
 
-  socket.on("joinGame", (gameId) => {
+  socket.on("joinGame", async ({gameId,nickname}) => {
     socket.join(gameId);
+    const newPlayer = {
+      socketId: socket.id, 
+      name: nickname,
+      team: "spectator",
+      role: "spectator"
+    };
+
+  // Add to DB
+  await Game.findByIdAndUpdate(gameId, { 
+    $push: { players: newPlayer } 
+  });
     console.log(`🔵 User ${socket.id} joined game ${gameId}`);
     // send an acknowledgement back to the joining socket
     socket.emit("joinedGame", { gameId, socketId: socket.id });

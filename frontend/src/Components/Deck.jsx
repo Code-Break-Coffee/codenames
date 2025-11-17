@@ -25,6 +25,8 @@ const Deck = () => {
     setJoinedTeam(team);
     setJoinedTitle(title);
   }
+  let hasJoined = false;
+
 
   useEffect(() => {
     socket.on("receiveMessage", (data) => console.log("Received live message:", data));
@@ -86,8 +88,10 @@ const Deck = () => {
 
   useEffect(() => {
     if (!gameId) return;
+    if (hasJoined) return;
+    hasJoined = true;
     console.log("➡️ Emitting joinGame for", gameId);
-    socket.emit("joinGame", gameId);
+    socket.emit("joinGame", {gameId,nickname: localStorage.getItem("nickname")});
 
     const onJoined = (data) => console.log('✅ joinedGame ack received from server:', data);
     const onPlayerJoined = (data) => console.log('👥 another player joined room:', data);
