@@ -46,7 +46,7 @@ const Home = () => {
       alert("Please enter a nickname.");
       return;
     }
-    
+    localStorage.setItem("nickname",nickname);
     setIsLoading(true);
     try {
       const res = await axios.post("http://localhost:3000/api/generate", { nickname });
@@ -69,6 +69,7 @@ const Home = () => {
       alert("Please enter a valid Game ID.");
       return;
     }
+    localStorage.setItem("nickname",nickname);
     navigate(`/game/${gameId.trim()}`);
   };
 

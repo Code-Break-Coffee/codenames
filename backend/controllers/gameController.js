@@ -19,6 +19,7 @@ const getCards = async (req, res) => {
 
 const genrate_game= async (req,res)=>{
     try{
+      const nickname=req.body.nickname;
         const words = await Words.aggregate([{ $sample: { size: 25 } }]);
         const assignments = [
             ...Array(9).fill("red"),
@@ -32,6 +33,7 @@ const genrate_game= async (req,res)=>{
             type: assignments[index],
             revealed: false
         }));
+  
     const newGame = new Game({
       board,
       redScore: 9,
