@@ -1,23 +1,92 @@
 // ClueInput.jsx
 import React, { useState,useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import socket from '../socket';
 
 const ClueInput = ({ onClueSubmit }) => {
+  const { gameId } = useParams();
   const [clueWord, setClueWord] = useState('');
   const [clueNumber, setClueNumber] = useState('1');
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [cardsRevealed, setCardsRevealed] = useState(0);
+  // Read joined role/team directly from localStorage (synchronous, avoids timing issues)
+  const joinedTitle = (typeof window !== 'undefined' && localStorage.getItem('joinedTitle')) || '';
+  const joinedTeam = (typeof window !== 'undefined' && localStorage.getItem('joinedTeam')) || '';
+
+  // read currentTurn from the Redux store so we can restrict Concealer input to the active team
+  const currentTurn = useSelector((state) => state.game?.currentTurn ?? 'red');
 
   const numbers = Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `${i + 1}` })).concat({ value: 'infinity', label: '∞' });
 
   useEffect(() => {
     const onClueReceived = (clueData) => {
+      console.log('📬 clueReceived:', clueData);
       setClueWord(clueData.word);
       setClueNumber(clueData.number);
-      setSubmitted(true);
+  setIsSubmitted(true);
+      setCardsRevealed(0); // Reset counter for new turn
     };
     socket.on('clueReceived', onClueReceived);
-    return () => socket.off('clueReceived', onClueReceived);
-  }, []);
+
+    // Listen for requestClue event to activate input for new Concealer
+    const onRequestClue = ({ currentTurn }) => {
+      // Only activate if this client is the Concealer for the new turn
+      const normalizedRole = String(joinedTitle || '').toLowerCase();
+      const normalizedTeam = String(joinedTeam || '').toLowerCase();
+      const normalizedTurn = String(currentTurn || '').toLowerCase();
+      const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
+      if (isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn) {
+  setIsSubmitted(false);
+        setClueWord('');
+        setClueNumber('1');
+        setCardsRevealed(0);
+      }
+    };
+    socket.on('requestClue', onRequestClue);
+
+    // Listen for turnSwitched to clear previous clue for new Concealer
+    const onTurnSwitched = ({ currentTurn }) => {
+      const normalizedRole = String(joinedTitle || '').toLowerCase();
+      const normalizedTeam = String(joinedTeam || '').toLowerCase();
+      const normalizedTurn = String(currentTurn || '').toLowerCase();
+      const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
+      if (isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn) {
+  setIsSubmitted(false);
+        setClueWord('');
+        setClueNumber('1');
+        setCardsRevealed(0);
+      }
+    };
+    socket.on('turnSwitched', onTurnSwitched);
+
+    return () => {
+      socket.off('clueReceived', onClueReceived);
+      socket.off('requestClue', onRequestClue);
+      socket.off('turnSwitched', onTurnSwitched);
+    };
+  }, [joinedTitle, joinedTeam]);
+
+  useEffect(() => {
+    const onCardRevealed = ({ cardsRevealedThisTurn }) => {
+      console.log('🎯 Card revealed, count:', cardsRevealedThisTurn);
+      setCardsRevealed(cardsRevealedThisTurn || 0);
+      
+      // Check if we've reached the clue number limit
+      if (cardsRevealedThisTurn && clueNumber !== 'infinity' && cardsRevealedThisTurn >= parseInt(clueNumber)) {
+        console.log(`✅ Clue limit reached! ${cardsRevealedThisTurn} cards revealed, switching turn...`);
+  setIsSubmitted(false);
+        setClueWord('');
+        setClueNumber('1');
+        setCardsRevealed(0);
+        
+        // Emit switchTurn event
+        socket.emit('switchTurn', { gameId });
+      }
+    };
+    socket.on('cardRevealed', onCardRevealed);
+    return () => socket.off('cardRevealed', onCardRevealed);
+  }, [clueNumber, gameId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,14 +96,37 @@ const ClueInput = ({ onClueSubmit }) => {
       return;
     }
 
-    const clueData = { word: clueWord, number: clueNumber };
+    const clueData = { word: clueWord, number: clueNumber, gameId };
+    console.log('➡️ Emitting clueSubmitted:', clueData);
     socket.emit('clueSubmitted', clueData);
     onClueSubmit?.(clueData);
   };
 
+  // Normalize and allow slight variations (e.g., 'Concealer', 'Concealers')
+  const normalizedRole = String(joinedTitle || '').toLowerCase();
+  const normalizedTeam = String(joinedTeam || '').toLowerCase();
+  const normalizedTurn = String(currentTurn || '').toLowerCase();
+
+  const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
+  const isConcealers = isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn;
+
+
+  // Debug banner: always show for troubleshooting, fixed at top of page
+  const debugBanner = (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: '#f9fafb', color: '#222', fontSize: 13, padding: 4, zIndex: 9999, borderBottom: '1px solid #ddd', textAlign: 'center' }}>
+      <b>DEBUG:</b> role=<b>{String(joinedTitle)}</b> team=<b>{String(joinedTeam)}</b> currentTurn=<b>{String(currentTurn)}</b> | normalizedRole=<b>{normalizedRole}</b> normalizedTeam=<b>{normalizedTeam}</b> normalizedTurn=<b>{normalizedTurn}</b> | isConcealers=<b>{String(isConcealers)}</b>
+    </div>
+  );
+
+  if (!isConcealers) {
+    return debugBanner; // Show debug info even if input is hidden
+  }
+
   return (
-    <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
-      {!submitted ? (
+    <div>
+      {debugBanner}
+      <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
+  {!isSubmitted ? (
         <form onSubmit={handleSubmit} className="flex items-center space-x-3 w-full justify-center">
           <input
             type="text"
@@ -64,12 +156,18 @@ const ClueInput = ({ onClueSubmit }) => {
           </button>
         </form>
       ) : (
-        <div className="text-center text-2xl font-bold tracking-wide text-gray-900 dark:text-white">
-          <span className="uppercase">{clueWord}</span>{" "}
-          <span className="text-primary font-extrabold">({clueNumber === 'infinity' ? '∞' : clueNumber})</span>
+        <div className="text-center">
+          <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white mb-2">
+            <span className="uppercase">{clueWord}</span>{" "}
+            <span className="text-primary font-extrabold">({clueNumber === 'infinity' ? '∞' : clueNumber})</span>
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            {cardsRevealed} / {clueNumber === 'infinity' ? '∞' : clueNumber} cards revealed
+          </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
   );
 };
 

@@ -22,6 +22,8 @@ const gameSchema = new mongoose.Schema({
   players: [playerSchema],
 
   currentTurn: { type: String, default: "red" },
+    // Number of guesses left in the current turn (set by clue, decremented by card click)
+    turnGuessesLeft: { type: Number, default: 0 },
 
   redScore: { type: Number, default: 9 },
   blueScore: { type: Number, default: 8 },
