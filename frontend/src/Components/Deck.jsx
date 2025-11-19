@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clickCard, setPendingReveal, revealLocal } from "../store/slices/cardsSlice";
 import { showOverlay, hideOverlay, setConfirmTarget, clearConfirmTarget } from "../store/slices/uiSlice";
+import { updatePlayers } from "../store/slices/playersSlice";
 import socket from "../socket";
 import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
@@ -21,11 +22,16 @@ const Deck = () => {
   const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
   const [joinedTeam, setJoinedTeam] = useState("");
   const [joinedTitle, setJoinedTitle] = useState("");
+  const hasJoined = useRef(false);
   const handleTeamData=(team,title)=>{
     setJoinedTeam(team);
     setJoinedTitle(title);
+    // inform server to add/update this player in the game's players list
+    const nickname = localStorage.getItem('nickname') || 'Anonymous';
+    console.log('➡️ Emitting joinTeam', { gameId, nickname, team, role: title });
+    socket.emit('joinTeam', { gameId, nickname, team, role: title });
   }
-  let hasJoined = false;
+
 
 
   useEffect(() => {
@@ -78,6 +84,11 @@ const Deck = () => {
       _raw: c,
     }));
     dispatch(setCards(normalized));
+    
+    // Initialize players from game document
+    if (res.data.players) {
+      dispatch(updatePlayers({ players: res.data.players }));
+    }
   } catch (err) {
     console.error("Failed to fetch game:", err);
   }
@@ -88,27 +99,45 @@ const Deck = () => {
 
   useEffect(() => {
     if (!gameId) return;
-    if (hasJoined) return;
-    hasJoined = true;
+    if (hasJoined.current) return;
+    hasJoined.current = true;
+
+
     console.log("➡️ Emitting joinGame for", gameId);
-    socket.emit("joinGame", {gameId,nickname: localStorage.getItem("nickname")});
+    socket.emit("joinGame", { gameId, nickname: localStorage.getItem("nickname") });
 
-    const onJoined = (data) => console.log('✅ joinedGame ack received from server:', data);
-    const onPlayerJoined = (data) => console.log('👥 another player joined room:', data);
+    const onJoined = (data) => console.log("✅ joinedGame ack:", data);
+    const onPlayerJoined = (data) => console.log("👥 another player:", data);
 
-    socket.on('joinedGame', onJoined);
-    socket.on('playerJoined', onPlayerJoined);
+    socket.on("joinedGame", onJoined);
+    socket.on("playerJoined", onPlayerJoined);
+
+    const onPlayersUpdated = ({ players }) => {
+      console.log("🔁 players updated:", players);
+      dispatch(updatePlayers({ players }));
+    };
+
+    const onJoinedTeamAck = ({ players }) => {
+      console.log("🎯 joined team ack:", players);
+      dispatch(updatePlayers({ players }));
+    };
+
+    socket.on("playersUpdated", onPlayersUpdated);
+    socket.on("joinedTeamAck", onJoinedTeamAck);
 
     return () => {
-      socket.off('joinedGame', onJoined);
-      socket.off('playerJoined', onPlayerJoined);
+      socket.off("joinedGame", onJoined);
+      socket.off("playerJoined", onPlayerJoined);
+      socket.off("playersUpdated", onPlayersUpdated);
+      socket.off("joinedTeamAck", onJoinedTeamAck);
     };
-  }, [gameId]);
+  }, [gameId, dispatch]);
 
   useEffect(() => {
     socket.on("cardRevealed", ({ cardId,updated_score }) => {
       // Trigger animation on other participants' screens
       dispatch(setPendingReveal({ id: cardId, pending: true }));
+      console.log(updated_score);
       dispatch(updateScores({
         red: updated_score.redScore,
         blue: updated_score.blueScore

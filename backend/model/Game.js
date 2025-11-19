@@ -9,8 +9,10 @@ const cardSchema = new mongoose.Schema({
 const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   socketId: { type: String, required: true },
-  team: { type: String, enum: ["red", "blue"], required: true },
-  role: { type: String, enum: ["spymaster", "operative"], default: "spectator" }
+  // allow spectators too
+  team: { type: String, enum: ["red", "blue", "spectator"], required: true },
+  // allow more role values (spectator / concealer / revealer etc.)
+  role: { type: String, enum: ["spymaster", "operative", "spectator", "Concealers", "Revealers"], default: "spectator" }
 });
 
 const gameSchema = new mongoose.Schema({
