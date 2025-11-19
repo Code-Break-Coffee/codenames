@@ -44,31 +44,76 @@ function handleSocketEvents(io, socket) {
     }
   });
 
-  socket.on("revealCard", async ({ gameId, cardId }) => {
-    console.log(`🟥 Card revealed in game ${gameId}: ${cardId}`);
-    let game=await Game.findById(gameId);
+  // No longer need in-memory turnCardCounts; use DB field turnGuessesLeft
+  // Track cards revealed this turn for each game (reset on turn switch)
+  let turnCardCounts = {};
+
+  socket.on("revealCard", async ({ gameId, cardId, socketId }) => {
+    console.log(`🟥 Card revealed in game ${gameId}: ${cardId} by socketID : ${socketId}`);
+    let game = await Game.findById(gameId);
+    if (!game) return;
+
     // Try to resolve card by index or by subdocument id
     let card;
     let color;
     if (typeof cardId === 'number' || /^[0-9]+$/.test(String(cardId))) {
       card = game.board[cardId];
     } else {
-      // subdocument id (ObjectId string)
       card = game.board.id ? game.board.id(cardId) : game.board.find(c => String(c._id) === String(cardId));
     }
     color = card ? card.type : undefined;
-    const updated_score={
-      redScore:game.redScore,
-      blueScore:game.blueScore
+
+    // Update score
+    const updated_score = {
+      redScore: game.redScore,
+      blueScore: game.blueScore
+    };
+    if (color == "blue") {
+      updated_score.blueScore = updated_score.blueScore - 1;
     }
-    if(color=="blue"){
-      updated_score.blueScore=updated_score.blueScore-1;
+    if (color == "red") {
+      updated_score.redScore = updated_score.redScore - 1;
     }
-    if(color=="red"){
-      updated_score.redScore=updated_score.redScore-1;
+
+    // Track cards revealed this turn
+    if (!turnCardCounts[gameId]) {
+      turnCardCounts[gameId] = 0;
     }
-    let result= await Game.findByIdAndUpdate(gameId,{ $set:updated_score});
-    io.to(gameId).emit("cardRevealed", { cardId, updated_score });
+    turnCardCounts[gameId]++;
+
+    // Decrement guesses left in DB
+    let guessesLeft = typeof game.turnGuessesLeft === 'number' ? game.turnGuessesLeft : 0;
+    guessesLeft = Math.max(0, guessesLeft - 1);
+
+    // Save score and guesses left
+    await Game.findByIdAndUpdate(gameId, { $set: { ...updated_score, turnGuessesLeft: guessesLeft } });
+
+    // Emit card revealed and guesses left and cardsRevealedThisTurn
+    io.to(gameId).emit("cardRevealed", { cardId, updated_score, guessesLeft, cardsRevealedThisTurn: turnCardCounts[gameId] });
+
+    // If guessesLeft is 0, switch turn immediately
+    if (guessesLeft === 0) {
+      const newTurn = game.currentTurn === "red" ? "blue" : "red";
+      await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn } });
+      io.to(gameId).emit("turnSwitched", { currentTurn: newTurn });
+
+      // Prompt the new team's Concealer to submit a clue
+      // Find all sockets for the new team's Concealer(s)
+      const updatedGame = await Game.findById(gameId);
+      if (updatedGame && updatedGame.players) {
+        updatedGame.players.forEach(player => {
+          if (
+            player.role && player.role.toLowerCase().startsWith('conceal') &&
+            player.team && player.team.toLowerCase() === newTurn
+          ) {
+            // Emit only to the Concealer's socket
+            io.to(player.socketId).emit("requestClue", { currentTurn: newTurn });
+          }
+        });
+      }
+      // Reset cards revealed count for new turn
+      turnCardCounts[gameId] = 0;
+    }
   });
 
   // Handle joining a specific team/role
@@ -112,12 +157,26 @@ function handleSocketEvents(io, socket) {
 }
 
 function clueSubmitted(io,socket){
-  socket.on("clueSubmitted", (clueData) => {
+  socket.on("clueSubmitted", async(clueData) => {
     console.log("💡 Clue submitted:", clueData);
-
-    io.emit("clueReceived", clueData);
+    // Emit to the specific game room, not globally
+      
+      let clueCount = clueData.number;
+      if (clueCount === 'infinity') clueCount = 99;
+      clueCount = Number(clueCount);
+      await Game.findByIdAndUpdate(clueData.gameId, { $set: { turnGuessesLeft: clueCount } });
+      
+      // Emit to the specific game room, not globally
+      if (clueData.gameId) {
+        io.to(clueData.gameId).emit("clueReceived", clueData);
+      } else {
+        io.emit("clueReceived", clueData);
+      }
   });
 }
+
+  // No longer need manual switchTurn from frontend; handled by card logic
+
 
 
 
