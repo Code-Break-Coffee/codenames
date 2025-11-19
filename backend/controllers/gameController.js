@@ -50,5 +50,17 @@ const genrate_game= async (req,res)=>{
 };
 
 
+const getPlayers=async(req,res)=>{
+      try{
+         const gameId = req.params.id;
+         const data=await Game.findById(gameId);
+         return res.status(200).json({players:data.players});
+      }
+      catch(err){
+        return res.status(500).json({message: err.message});
+      }
+}
 
-module.exports={getCards,genrate_game};
+
+
+module.exports={getCards,genrate_game,getPlayers};
