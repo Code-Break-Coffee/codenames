@@ -98,7 +98,6 @@ function handleSocketEvents(io, socket) {
       io.to(gameId).emit("turnSwitched", { currentTurn: newTurn });
 
       // Prompt the new team's Concealer to submit a clue
-      // Find all sockets for the new team's Concealer(s)
       const updatedGame = await Game.findById(gameId);
       if (updatedGame && updatedGame.players) {
         updatedGame.players.forEach(player => {
@@ -106,13 +105,48 @@ function handleSocketEvents(io, socket) {
             player.role && player.role.toLowerCase().startsWith('conceal') &&
             player.team && player.team.toLowerCase() === newTurn
           ) {
-            // Emit only to the Concealer's socket
             io.to(player.socketId).emit("requestClue", { currentTurn: newTurn });
           }
         });
       }
       // Reset cards revealed count for new turn
       turnCardCounts[gameId] = 0;
+    }
+
+    // If the revealed card belongs to the opposing team (not neutral), switch turn immediately.
+    // This allows the other team's Revealers to continue clicking next card.
+    // Note: game.currentTurn is the turn before this reveal.
+    try {
+  const currentTurn = String(game.currentTurn || '').toLowerCase();
+  const revealedColor = String(color || '').toLowerCase();
+  console.log(revealedColor);
+  const isTeamColor = revealedColor === 'red' || revealedColor === 'blue';
+  // Treat 'white' (neutral) or 'neutral' as a turn-ending reveal as well
+  const isNeutralWhite = revealedColor === 'white' || revealedColor === 'neutral';
+  if (isNeutralWhite || (isTeamColor && revealedColor !== currentTurn)) {
+        // Opponent card revealed -> switch turn now
+        const newTurn = currentTurn === 'red' ? 'blue' : 'red';
+        await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn, turnGuessesLeft: 0 } });
+        io.to(gameId).emit('turnSwitched', { currentTurn: newTurn });
+
+        // Prompt new team's Concealer(s)
+        const updatedGame2 = await Game.findById(gameId);
+        if (updatedGame2 && updatedGame2.players) {
+          updatedGame2.players.forEach(player => {
+            if (
+              player.role && player.role.toLowerCase().startsWith('conceal') &&
+              player.team && player.team.toLowerCase() === newTurn
+            ) {
+              io.to(player.socketId).emit('requestClue', { currentTurn: newTurn });
+            }
+          });
+        }
+
+        // Reset cards revealed count for new turn
+        turnCardCounts[gameId] = 0;
+      }
+    } catch (err) {
+      console.error('Error handling opponent card auto-switch:', err);
     }
   });
 

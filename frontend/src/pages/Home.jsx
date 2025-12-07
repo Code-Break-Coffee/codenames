@@ -42,6 +42,9 @@ const Home = () => {
   const navigate = useNavigate();
 
   async function handleCreateGame() {
+    let temp_color=localStorage.getItem("theme");
+    localStorage.clear();
+    localStorage.setItem("theme",temp_color);
     if (!nickname.trim()) {
       alert("Please enter a nickname.");
       return;
@@ -61,6 +64,9 @@ const Home = () => {
   };
 
   const handleJoinGame = () => {
+    let temp_color=localStorage.getItem("theme");
+    localStorage.clear();
+    localStorage.setItem("theme",temp_color);
     if (!nickname.trim()) {
       alert("Please enter a nickname.");
       return;
