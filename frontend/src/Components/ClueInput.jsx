@@ -111,20 +111,9 @@ const ClueInput = ({ onClueSubmit }) => {
   const isConcealers = isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn;
 
 
-  // Debug banner: always show for troubleshooting, fixed at top of page
-  const debugBanner = (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: '#f9fafb', color: '#222', fontSize: 13, padding: 4, zIndex: 9999, borderBottom: '1px solid #ddd', textAlign: 'center' }}>
-      <b>DEBUG:</b> role=<b>{String(joinedTitle)}</b> team=<b>{String(joinedTeam)}</b> currentTurn=<b>{String(currentTurn)}</b> | normalizedRole=<b>{normalizedRole}</b> normalizedTeam=<b>{normalizedTeam}</b> normalizedTurn=<b>{normalizedTurn}</b> | isConcealers=<b>{String(isConcealers)}</b>
-    </div>
-  );
-
-  if (!isConcealers) {
-    return debugBanner; // Show debug info even if input is hidden
-  }
 
   return (
     <div>
-      {debugBanner}
       <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
   {!isSubmitted ? (
         <form onSubmit={handleSubmit} className="flex items-center space-x-3 w-full justify-center">
