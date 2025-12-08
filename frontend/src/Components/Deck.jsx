@@ -70,6 +70,22 @@ useEffect(() => {
     };
   }, [dispatch]);
 
+useEffect(() => {
+  async function fetchScores() {
+    try {
+      const res = await axios.get(`http://localhost:3000/api/score_and_turn/${gameId}`);
+      dispatch(updateScores({
+        red: res.data.redScore,
+        blue: res.data.blueScore,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch scores", err);
+    }
+  }
+
+  fetchScores();
+}, []);
+
   const handleClueSubmit = (clueData) => {
     dispatch(showOverlay(clueData));
     setTimeout(() => dispatch(hideOverlay()), 3000);
@@ -131,6 +147,7 @@ useEffect(() => {
       // keep raw fields if you need them
       _raw: c,
     }));
+
     dispatch(setCards(normalized));
     
     // Initialize players from game document
