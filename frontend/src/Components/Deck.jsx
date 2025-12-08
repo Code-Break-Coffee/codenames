@@ -237,9 +237,9 @@ useEffect(() => {
         </div>
         
         {/* ClueInput or Revealer Display - Bottom */}
-        <ClueInput onClueSubmit={handleClueSubmit} />
+        <ClueInput onClueSubmit={handleClueSubmit}/>
         
-        {/* Persistent clue display for Revealers - Bottom of deck */}
+        {/* Persistent clue display for Revealers - Bottom of deck
         {clueDisplayActive && lastClue && (
           <div className="w-[1100px] p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
             <div className="text-center">
@@ -250,7 +250,7 @@ useEffect(() => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       <ThemeToggle />
