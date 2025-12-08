@@ -61,6 +61,17 @@ const getPlayers=async(req,res)=>{
       }
 }
 
+const getTurnAndScores=async(req,res)=>{
+  try{
+      const gameId = req.params.id;
+      const data=await Game.findById(gameId);
+      return res.status(200).json({gameTurn:data.currentTurn,redScore:data.redScore,blueScore:data.blueScore});
+  }
+  catch(err){
+    return res.status(500).json({message:err.message});
+  }
+}
 
 
-module.exports={getCards,genrate_game,getPlayers};
+
+module.exports={getCards,genrate_game,getPlayers,getTurnAndScores};
