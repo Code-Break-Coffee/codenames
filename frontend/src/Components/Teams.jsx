@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import TeamPanel from "./TeamPanel";
 import axios from "axios";
 
@@ -48,6 +49,11 @@ const Teams = ({ onDataReceived }) => {
   const blueConcealers = allPlayers.filter(p => p.team === "blue" && p.role === "Concealers").map(p => p.name);
   const blueRevealers = allPlayers.filter(p => p.team === "blue" && p.role === "Revealers").map(p => p.name);
 
+  // Read persisted/Redux scores and fall back to 0 if shape varies
+  const scoresState = useSelector(state => state.scores || {});
+  const redScore = scoresState?.red ?? scoresState?.redScore ?? scoresState?.red_team ?? scoresState?.redTeam ?? 0;
+  const blueScore = scoresState?.blue ?? scoresState?.blueScore ?? scoresState?.blue_team ?? scoresState?.blueTeam ?? 0;
+
   return (
     <JoinContext.Provider value={{
       teamInfo: [joinedTeam, setJoinedTeam],
@@ -55,11 +61,11 @@ const Teams = ({ onDataReceived }) => {
       handleJoin
     }}>
       <div className="absolute top-[50%] left-8 translate-y-[-50%]">
-        <TeamPanel team="red" score={0} concealers={redConcealers} revealers={redRevealers}/>
+        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers}/>
       </div>
 
       <div className="absolute top-[50%] right-8 translate-y-[-50%]">
-        <TeamPanel team="blue" score={0} concealers={blueConcealers} revealers={blueRevealers}/>
+        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers}/>
       </div>
     </JoinContext.Provider>
   );

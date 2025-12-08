@@ -115,7 +115,7 @@ const ClueInput = ({ onClueSubmit }) => {
   return (
     <div>
       <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
-  {!isSubmitted ? (
+  {!isSubmitted && isConcealers ? (
         <form onSubmit={handleSubmit} className="flex items-center space-x-3 w-full justify-center">
           <input
             type="text"
@@ -145,6 +145,7 @@ const ClueInput = ({ onClueSubmit }) => {
           </button>
         </form>
       ) : (
+        clueWord ? (
         <div className="text-center">
           <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white mb-2">
             <span className="uppercase">{clueWord}</span>{" "}
@@ -154,6 +155,10 @@ const ClueInput = ({ onClueSubmit }) => {
             {cardsRevealed} / {clueNumber === 'infinity' ? '∞' : clueNumber} cards revealed
           </div>
         </div>
+
+        ) : (
+          <></>
+        )
       )}
         </div>
       </div>
