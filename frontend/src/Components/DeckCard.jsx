@@ -1,9 +1,9 @@
 import React from 'react';
 
-export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false }) {
+export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false }) {
   const teamStyles = {
     red: {
-      bg: 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
+      bg: 'bg-gradient-to-br from-red-700 via-red-800 to-red-900',
       border: 'border-red-400/30',
       shadow: 'shadow-xl shadow-red-500/40',
       glow: 'group-hover:shadow-red-500/50',
@@ -117,7 +117,12 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
               textShadow: '0 2px 10px rgba(0,0,0,0.3)'
             }}
           >
-            {word}
+            {concealerView && serverRevealed ? (
+              // Concealers: erase word text for cards that were revealed by Revealers
+              <span className="opacity-0">{word}</span>
+            ) : (
+              word
+            )}
           </span>
         </div>
 

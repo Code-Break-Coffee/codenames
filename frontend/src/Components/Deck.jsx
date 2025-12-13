@@ -9,6 +9,8 @@ import { DeckCard } from "./DeckCard";
 import ThemeToggle from "./ThemeToggle";
 import Teams from "./Teams";
 import ClueInput from "./ClueInput";
+import TurnOverlay from "./TurnOverlay";
+import TurnBadge from "./TurnBadge";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { setCards } from "../store/slices/cardsSlice";
@@ -223,6 +225,10 @@ useEffect(() => {
       dispatch(setCurrentTurn(currentTurn));
       // Hide persistent clue display when turn switches
       dispatch(hideClueDisplay());
+      // Show a brief turn overlay (reuses overlayActive/lastClue state)
+      dispatch(showOverlay({ turn: currentTurn, isTurn: true }));
+      // hide after the overlay component finishes its animation
+      setTimeout(() => dispatch(hideOverlay()), 3500);
     });
 
     return () => {
@@ -235,6 +241,8 @@ useEffect(() => {
   return (
     <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">
       <Teams onDataReceived={handleTeamData}/>
+      {/* Persistent turn badge (shows from first render and updates on turn change) */}
+      <TurnBadge />
       
       <div className="flex flex-col items-center justify-center gap-4">
         {/* Card Deck - Top */}
@@ -249,6 +257,8 @@ useEffect(() => {
               confirmButton={confirmTargetId === card.id}
               revealed={joinedTitle === "Concealers" ? true : card.revealed}
               pending={card.pendingReveal}
+              serverRevealed={card.revealed}
+              concealerView={joinedTitle === "Concealers"}
             />
           ))}
         </div>
@@ -273,7 +283,10 @@ useEffect(() => {
       <ThemeToggle />
 
       {/* Brief overlay for brief clue announcement (Concealers, Spectators) */}
-      {overlayActive && (
+      {overlayActive && lastClue && lastClue.isTurn ? (
+        // Turn overlay animates itself to the top; keep it separate component
+        <TurnOverlay team={lastClue.turn} onDone={() => dispatch(hideOverlay())} />
+      ) : overlayActive && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
           {lastClue ? (
             <div className="text-center">
