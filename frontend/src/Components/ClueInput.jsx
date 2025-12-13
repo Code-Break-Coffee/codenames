@@ -14,12 +14,29 @@ const ClueInput = ({ onClueSubmit }) => {
   const joinedTitle = (typeof window !== 'undefined' && localStorage.getItem('joinedTitle')) || '';
   const joinedTeam = (typeof window !== 'undefined' && localStorage.getItem('joinedTeam')) || '';
 
+  // Read persisted UI clue state so reloaded/rejoined revealers can still see it
+  const ui = useSelector((state) => state.ui || {});
+
   // read currentTurn from the Redux store so we can restrict Concealer input to the active team
   const currentTurn = useSelector((state) => state.game?.currentTurn ?? 'red');
 
   const numbers = Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `${i + 1}` })).concat({ value: 'infinity', label: '∞' });
 
   useEffect(() => {
+    // If this client is a Revealer and there's a persisted clue, show it after reload/join
+    try {
+      const normalizedRoleLocal = String(joinedTitle || '').toLowerCase();
+      const isRevealerLocal = normalizedRoleLocal.includes('reveal') || normalizedRoleLocal === 'revealer';
+      if (!clueWord && isRevealerLocal && ui?.clueDisplayActive && ui?.lastClue) {
+        setClueWord(ui.lastClue.word);
+        setClueNumber(ui.lastClue.number);
+        setIsSubmitted(true);
+        setCardsRevealed(ui.lastClue.revealedCount || 0);
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const onClueReceived = (clueData) => {
       console.log('📬 clueReceived:', clueData);
       setClueWord(clueData.word);
@@ -114,8 +131,8 @@ const ClueInput = ({ onClueSubmit }) => {
 
   return (
     <div>
-      <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
   {!isSubmitted && isConcealers ? (
+      <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
         <form onSubmit={handleSubmit} className="flex items-center space-x-3 w-full justify-center">
           <input
             type="text"
@@ -144,6 +161,7 @@ const ClueInput = ({ onClueSubmit }) => {
             </svg>
           </button>
         </form>
+        </div>
       ) : (
         clueWord ? (
         <div className="text-center">
@@ -161,7 +179,6 @@ const ClueInput = ({ onClueSubmit }) => {
         )
       )}
         </div>
-      </div>
   );
 };
 
