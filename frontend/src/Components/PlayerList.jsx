@@ -33,21 +33,29 @@ const PlayerList = ({ team, title, players, colorClasses }) => {
       </h4>
 
       <div className="space-y-2">
-        {players.map((player, index) => (
-          <div
-            key={index}
-            className="flex items-center p-2 rounded-lg bg-sidebar-accent hover:bg-sidebar-accent-foreground/10 transition-colors"
-          >
-            <svg className={`w-4 h-4 mr-3 ${colorClasses.text}`} fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100 2h6a1 1 0 100-2H7z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="font-medium text-sidebar-accent-foreground">{player}</span>
-          </div>
-        ))}
+        {players.map((player, index) => {
+          const localNick = (typeof window !== 'undefined' && localStorage.getItem('nickname')) || '';
+          const isLocal = player === localNick;
+          const joinedHere = isAlreadyJoined && isLocal;
+          return (
+            <div
+              key={index}
+              className={`flex items-center p-2 rounded-lg transition-colors ${joinedHere ? 'bg-green-100 dark:bg-green-900/30 ring-2 ring-green-400' : 'bg-sidebar-accent hover:bg-sidebar-accent-foreground/10'}`}
+            >
+              <svg className={`w-4 h-4 mr-3 ${colorClasses.text}`} fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100 2h6a1 1 0 100-2H7z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className={`font-medium ${joinedHere ? 'text-green-900 dark:text-green-100' : 'text-sidebar-accent-foreground'}`}>{player}</span>
+              {isLocal && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/80 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-semibold">You</span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-3">
