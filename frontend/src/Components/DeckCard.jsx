@@ -1,4 +1,5 @@
 import React from 'react';
+import { IoInformationCircle } from "react-icons/io5";
 
 export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false }) {
   const teamStyles = {
@@ -62,6 +63,13 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
+      {
+        !revealed ? (
+          <IoInformationCircle className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
+        ) : (
+          <></>
+        ) 
+      }
       {
         confirmButton && !revealed ? (
           <div
