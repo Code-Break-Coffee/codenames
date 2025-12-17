@@ -28,6 +28,7 @@ const Deck = () => {
   const currentTurn = useSelector((state) => state.game?.currentTurn ?? "red");
   const [joinedTeam, setJoinedTeam] = useState("");
   const [joinedTitle, setJoinedTitle] = useState("");
+  const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
   const handleTeamData=(team,title)=>{
     setJoinedTeam(team);
@@ -42,6 +43,22 @@ const Deck = () => {
   }
 
 useEffect(() => {
+  // If the page is refreshed and the stored role was "Concealers",
+  // clear the stored role and mark that we need to tell the server
+  // this player should now be a spectator (so the players list updates).
+  const prevTitle = localStorage.getItem('joinedTitle');
+  const prevTeam = localStorage.getItem('joinedTeam');
+  if (prevTitle === 'Concealers') {
+    console.log("🧹 Detected stale 'Concealers' on refresh — will update server to spectator after join");
+    needsSpectatorUpdate.current = true;
+  }
+
+  // Clear persisted join info (prevents concealer UI bleed-through)
+  localStorage.removeItem('joinedTitle');
+  localStorage.removeItem('joinedTeam');
+  setJoinedTitle('');
+  setJoinedTeam('');
+
   socket.on("connect", () => {
     console.log("🟢 Connected with socket ID:", socket.id);
     localStorage.setItem("socketId", socket.id);
@@ -181,7 +198,20 @@ useEffect(() => {
     const onJoined = (data) => console.log("✅ joinedGame ack:", data);
     const onPlayerJoined = (data) => console.log("👥 another player:", data);
 
-    socket.on("joinedGame", onJoined);
+    // If we detected that the client had been a Concealer before the refresh,
+    // tell the server to mark this socket/player as a spectator now that we've
+    // re-joined the game (server requires the player to exist first).
+    const onJoinedWithSpectatorFix = (data) => {
+      console.log("✅ joinedGame ack:", data);
+      if (needsSpectatorUpdate.current && gameId) {
+        const nickname = localStorage.getItem('nickname') || 'Anonymous';
+        console.log("➡️ Emitting joinTeam -> spectator to update players list after refresh", { gameId, nickname });
+        socket.emit('joinTeam', { gameId, nickname, team: 'spectator', role: 'spectator' });
+        needsSpectatorUpdate.current = false;
+      }
+    };
+
+  socket.on("joinedGame", onJoinedWithSpectatorFix);
     socket.on("playerJoined", onPlayerJoined);
 
     const onPlayersUpdated = ({ players }) => {
