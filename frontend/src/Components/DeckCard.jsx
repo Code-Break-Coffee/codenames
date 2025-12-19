@@ -1,7 +1,7 @@
 import React from 'react';
 import { IoInformationCircle } from "react-icons/io5";
 
-export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false }) {
+export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-700 via-red-800 to-red-900',
@@ -125,8 +125,8 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
               textShadow: '0 2px 10px rgba(0,0,0,0.3)'
             }}
           >
-            {concealerView && serverRevealed ? (
-              // Concealers: erase word text for cards that were revealed by Revealers
+            {concealerView && serverRevealed && !revealWordsOnGameOver ? (
+              // Concealers: normally erase word text for cards that were revealed by Revealers
               <span className="opacity-0">{word}</span>
             ) : (
               word
