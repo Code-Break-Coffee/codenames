@@ -26,10 +26,13 @@ const Deck = () => {
   const lastClue = useSelector((state) => state.ui?.lastClue ?? null);
   const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
   const currentTurn = useSelector((state) => state.game?.currentTurn ?? "red");
+  const scores = useSelector((state) => state.scores ?? { red: 9, blue: 8 });
   const [joinedTeam, setJoinedTeam] = useState("");
   const [joinedTitle, setJoinedTitle] = useState("");
+  const [finalWinner, setFinalWinner] = useState(null);
   const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
+  const prevScoresRef = useRef(scores);
   const handleTeamData=(team,title)=>{
     setJoinedTeam(team);
     setJoinedTitle(title);
@@ -69,6 +72,41 @@ useEffect(() => {
   };
 }, []);
 
+
+  useEffect(() => {
+    // detect score hitting zero -> trigger win overlay, reveal all cards and show winner
+    const prev = prevScoresRef.current || { red: Infinity, blue: Infinity };
+    const now = scores;
+    if (!prev) {
+      prevScoresRef.current = now;
+      return;
+    }
+
+    // Only trigger when a score *just* reached zero
+    const redJustHitZero = prev.red > 0 && now.red === 0;
+    const blueJustHitZero = prev.blue > 0 && now.blue === 0;
+
+    if (redJustHitZero || blueJustHitZero) {
+      const winner = redJustHitZero ? 'red' : 'blue';
+      const WIN_OVERLAY_MS = 3500;
+
+      // Set finalWinner immediately so turn switch handlers ignore follow-up overlays
+      setFinalWinner(winner);
+
+      // show the same overlay but as a win message
+      dispatch(showOverlay({ turn: winner, isWin: true }));
+
+      // after overlay finishes, hide overlay, reveal all cards and set final winner banner
+      setTimeout(() => {
+        dispatch(hideOverlay());
+        // reveal all cards locally
+        cards.forEach((c) => dispatch(revealLocal({ id: c.id, revealed: true })));
+        setFinalWinner(winner);
+      }, WIN_OVERLAY_MS);
+    }
+
+    prevScoresRef.current = now;
+  }, [scores, cards, dispatch]);
 
   useEffect(() => {
     socket.on("receiveMessage", (data) => console.log("Received live message:", data));
@@ -251,6 +289,8 @@ useEffect(() => {
     });
 
     socket.on("turnSwitched", ({ currentTurn }) => {
+      // If we've already declared a winner, ignore turn switch overlays
+      if (finalWinner) return;
       console.log(`🔄 Turn switched to ${currentTurn}`);
       dispatch(setCurrentTurn(currentTurn));
       // Hide persistent clue display when turn switches
@@ -265,7 +305,7 @@ useEffect(() => {
       socket.off("cardRevealed");
       socket.off("turnSwitched");
     };
-  }, [dispatch]);
+  }, [dispatch, finalWinner]);
 
 
   return (
@@ -289,6 +329,7 @@ useEffect(() => {
               pending={card.pendingReveal}
               serverRevealed={card.revealed}
               concealerView={joinedTitle === "Concealers"}
+              revealWordsOnGameOver={finalWinner != null}
             />
           ))}
         </div>
@@ -313,9 +354,9 @@ useEffect(() => {
       <ThemeToggle />
 
       {/* Brief overlay for brief clue announcement (Concealers, Spectators) */}
-      {overlayActive && lastClue && lastClue.isTurn ? (
-        // Turn overlay animates itself to the top; keep it separate component
-        <TurnOverlay team={lastClue.turn} onDone={() => dispatch(hideOverlay())} />
+      {overlayActive && lastClue && (lastClue.isTurn || lastClue.isWin) ? (
+        // Turn or Win overlay animates itself to the top; keep it separate component
+        <TurnOverlay team={lastClue.turn} isWin={lastClue.isWin} onDone={() => dispatch(hideOverlay())} />
       ) : overlayActive && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
           {lastClue ? (
@@ -332,8 +373,17 @@ useEffect(() => {
           )}
         </div>
       )}
-    </div>
-  );
-};
+      {/* Final winner badge shown after reveal */}
+      {finalWinner && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-6 z-40 pointer-events-none">
+          <div className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-lg text-white select-none ${finalWinner === 'red' ? 'bg-red-600' : 'bg-blue-600'}`}>
+            <div className="w-3 h-3 rounded-full bg-white/80" />
+            <div className="font-semibold tracking-wider">{finalWinner === 'red' ? 'Red Team Wins' : 'Blue Team Wins'}</div>
+          </div>
+        </div>
+      )}
+      </div>
+    );
+  };
 
-export default Deck;
+  export default Deck;
