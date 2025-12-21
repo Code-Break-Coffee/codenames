@@ -1,6 +1,6 @@
 import React from 'react';
 import { IoInformationCircle } from "react-icons/io5";
-
+import axios from 'axios';
 export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
   const teamStyles = {
     red: {
@@ -61,11 +61,23 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
   const animClass = pending ? 'animate-card-flip' : '';
   const revealedClass = revealed ? 'revealed-card' : '';
 
+  const handleInfoClick = async (e) => {
+    // prevent bubbling to card click
+    e.stopPropagation();
+    const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/'+word;
+    try {
+      const res = await axios.get(url);
+      console.log('Response:', res.data.extract);
+    } catch (err) {
+      console.error('❌ Axios GET error:', err);
+    }
+  };
+
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
       {
         !revealed ? (
-          <IoInformationCircle className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
+          <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
         ) : (
           <></>
         ) 
