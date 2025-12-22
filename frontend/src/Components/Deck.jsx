@@ -1,6 +1,6 @@
 import { useEffect, useState,useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { clickCard, setPendingReveal, revealLocal } from "../store/slices/cardsSlice";
+import { clickCard, setPendingReveal, revealLocal, resetAll } from "../store/slices/cardsSlice";
 import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, setConfirmTarget, clearConfirmTarget } from "../store/slices/uiSlice";
 import { updatePlayers } from "../store/slices/playersSlice";
 import { setCurrentTurn } from "../store/slices/gameSlice";
@@ -193,6 +193,10 @@ useEffect(() => {
 
   useEffect(() => {
     async function fetchBoard() {
+      // Clear any persisted reveal state immediately to avoid a flash
+      // of colored/revealed cards from a previous session while we
+      // fetch the actual board for this game.
+      dispatch(resetAll());
   try {
     const res = await axios.get(`http://localhost:3000/api/cards/${gameId}`);
     const normalized = (res.data.board || []).map((c, i) => ({

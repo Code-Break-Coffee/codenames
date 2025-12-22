@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { IoInformationCircle } from "react-icons/io5";
 import axios from 'axios';
 export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
@@ -61,13 +62,15 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
   const animClass = pending ? 'animate-card-flip' : '';
   const revealedClass = revealed ? 'revealed-card' : '';
 
+  const [response, setResponse] = useState("");
+
   const handleInfoClick = async (e) => {
     // prevent bubbling to card click
     e.stopPropagation();
     const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/'+word;
     try {
       const res = await axios.get(url);
-      console.log('Response:', res.data.extract);
+      setResponse(res.data.extract);
     } catch (err) {
       console.error('❌ Axios GET error:', err);
     }
@@ -128,7 +131,7 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
         {/* Word content */}
         <div className="relative h-full flex items-center justify-center p-3">
-          <span 
+          <span
             className="uppercase tracking-widest drop-shadow-lg text-center"
             style={{ 
               fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -144,6 +147,29 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
               word
             )}
           </span>
+        {/* Meaning modal (renders into document.body so it's not clipped by card) */}
+        {
+          response ? createPortal(
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={()=>setResponse('')}>
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+              <div className="relative w-full max-w-2xl max-h-[70vh] overflow-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-4" onClick={(e)=>e.stopPropagation()}>
+                <div className="flex items-start justify-between mb-2">
+                  <strong className="text-sm">Meaning</strong>
+                  <button
+                    aria-label="Close meaning"
+                    className="ml-3 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                    onClick={()=>setResponse('')}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{response}</p>
+              </div>
+            </div>,
+            document.body
+          ) : null
+        }
+        {/* Word content */}
         </div>
 
         {/* Shine effect on hover */}
