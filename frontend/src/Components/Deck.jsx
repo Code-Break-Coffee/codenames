@@ -33,6 +33,11 @@ const Deck = () => {
   const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
   const prevScoresRef = useRef(scores);
+  // Responsive scaling refs for preserving deck proportion across devices
+  const designWidth = 1100;
+  const designHeight = 750;
+  const wrapperRef = useRef(null);
+  const [scale, setScale] = useState(1);
   const handleTeamData=(team,title)=>{
     setJoinedTeam(team);
     setJoinedTitle(title);
@@ -311,48 +316,87 @@ useEffect(() => {
     };
   }, [dispatch, finalWinner]);
 
+  // Measure wrapper and compute scale so deck content (including fonts/icons)
+  // always preserves the original design proportions regardless of layout.
+  useEffect(() => {
+    const obsTarget = wrapperRef.current;
+    if (!obsTarget) return;
+
+    const compute = () => {
+      const w = obsTarget.clientWidth || 0;
+      const h = obsTarget.clientHeight || 0;
+      if (!w || !h) return;
+      const newScale = Math.max(0.45, Math.min(w / designWidth, h / designHeight));
+      setScale(Number(newScale.toFixed(4)));
+    };
+
+    // ResizeObserver for container resizing
+    const ro = new ResizeObserver(compute);
+    ro.observe(obsTarget);
+
+    // also compute initially
+    compute();
+
+    // listen to window resizes as well
+    window.addEventListener('resize', compute);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', compute);
+    };
+  }, []);
+
 
   return (
-    <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-hidden">
-      <Teams onDataReceived={handleTeamData}/>
+    <>
+    <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
       {/* Persistent turn badge (shows from first render and updates on turn change) */}
-      <TurnBadge />
       
-      <div className="flex flex-col items-center justify-center gap-4">
-        {/* Card Deck - Top */}
-        <div className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] w-[1100px] h-[750px] dark:bg-black/40 bg-white/40">
-          {cards.map((card) => (
-            <DeckCard
-              key={card.id}
-              word={card.word}
-              team={card.team}
-              click={() => onCardClick(card.id)}
-              clickConfirm={(e)=> onConfirmCardClick(e,card)}
-              confirmButton={confirmTargetId === card.id}
-              revealed={joinedTitle === "Concealers" ? true : card.revealed}
-              pending={card.pendingReveal}
-              serverRevealed={card.revealed}
-              concealerView={joinedTitle === "Concealers"}
-              revealWordsOnGameOver={finalWinner != null}
-            />
-          ))}
-        </div>
-        
-        {/* ClueInput or Revealer Display - Bottom */}
-        <ClueInput onClueSubmit={handleClueSubmit}/>
-        
-        {/* Persistent clue display for Revealers - Bottom of deck
-        {clueDisplayActive && lastClue && (
-          <div className="w-[1100px] p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
-            <div className="text-center">
-              <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold tracking-widest mb-2">REVEALER'S CLUE</p>
-              <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white">
-                <span className="uppercase">{lastClue.word}</span>{" "}
-                <span className="text-primary font-extrabold">({lastClue.number === 'infinity' ? '∞' : lastClue.number})</span>
-              </div>
+      <div className="flex flex-col items-center justify-center gap-4 w-full">
+        <div
+          ref={wrapperRef}
+          className="flex flex-col items-center gap-4 w-[min(1100px,95vw)] lg:max-w-[calc(100vw-560px)]"
+          style={{ maxHeight: 'calc(100vh - 160px)', height: `${designHeight * scale}px`, position: 'relative' }}
+        >
+          {/* Card Deck - Top (keeps exact design proportions by scaling inner content) */}
+          <div style={{ position: 'absolute', left: '50%', top: '50%', width: designWidth, height: designHeight, transform: `translate(-50%,-50%) scale(${scale})`, transformOrigin: 'center' }} className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] dark:bg-black/40 bg-white/40">
+            {cards.map((card) => (
+              <DeckCard
+                key={card.id}
+                word={card.word}
+                team={card.team}
+                click={() => onCardClick(card.id)}
+                clickConfirm={(e) => onConfirmCardClick(e, card)}
+                confirmButton={confirmTargetId === card.id}
+                revealed={joinedTitle === "Concealers" ? true : card.revealed}
+                pending={card.pendingReveal}
+                serverRevealed={card.revealed}
+                concealerView={joinedTitle === "Concealers"}
+                revealWordsOnGameOver={finalWinner != null}
+              />
+            ))}
             </div>
           </div>
-        )} */}
+
+          <Teams onDataReceived={handleTeamData} />
+          <TurnBadge />
+
+          {/* ClueInput or Revealer Display - Bottom */}
+          <ClueInput onClueSubmit={handleClueSubmit} />
+
+          {/* Persistent clue display for Revealers - Bottom of deck (kept hidden comment)
+          {clueDisplayActive && lastClue && (
+            <div style={{ width: '100%' }} className="p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
+              <div className="text-center">
+                <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold tracking-widest mb-2">REVEALER'S CLUE</p>
+                <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white">
+                  <span className="uppercase">{lastClue.word}</span>{" "}
+                  <span className="text-primary font-extrabold">({lastClue.number === 'infinity' ? '∞' : lastClue.number})</span>
+                </div>
+              </div>
+            </div>
+          )} */}
+        </div>
       </div>
 
       <ThemeToggle />
@@ -386,7 +430,7 @@ useEffect(() => {
           </div>
         </div>
       )}
-      </div>
+    </>
     );
   };
 

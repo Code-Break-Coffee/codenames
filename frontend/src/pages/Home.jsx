@@ -157,9 +157,9 @@ const Home = () => {
             {/* Create Game Button */}
             <button
               onClick={handleCreateGame}
-              disabled={isLoading || !nickname.trim()}
+              disabled={isLoading || !nickname.trim() || (gameId && nickname)}
               className={`w-full py-3 px-4 rounded-lg bg-primary text-primary-foreground font-semibold shadow-lg transition-opacity duration-200
-                ${(isLoading || !nickname.trim()) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`
+                ${(isLoading || !nickname.trim() || (gameId && nickname)) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`
               }
             >
               {isLoading ? 'Creating...' : 'Create New Game'}

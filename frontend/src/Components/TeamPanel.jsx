@@ -22,9 +22,9 @@ const TeamPanel = ({ team, score, concealers, revealers, joinFunction }) => {
   return (
     <div
       className={`
-        w-64 h-[750px] p-6 rounded-[30px] shadow-2xl transition-colors duration-500
+        w-64 p-6 rounded-[30px] shadow-2xl transition-colors duration-500
         dark:bg-black/40 bg-white/40 text-sidebar-foreground border border-sidebar-border
-        ${colorClasses.shadow}
+        ${colorClasses.shadow} overflow-hidden h-auto max-h-[80vh]
       `}
     >
       {/* Team Header */}

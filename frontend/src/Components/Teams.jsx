@@ -60,12 +60,19 @@ const Teams = ({ onDataReceived }) => {
       titleInfo: [joinedTitle, setJoinedTitle],
       handleJoin
     }}>
-      <div className="absolute top-[50%] left-8 translate-y-[-50%]">
-        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers}/>
+      {/* Desktop: side panels positioned vertically centered */}
+      <div className="hidden lg:block lg:absolute lg:top-1/2 lg:left-8 lg:-translate-y-1/2">
+        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} />
       </div>
 
-      <div className="absolute top-[50%] right-8 translate-y-[-50%]">
-        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers}/>
+      <div className="hidden lg:block lg:absolute lg:top-1/2 lg:right-8 lg:-translate-y-1/2">
+        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} />
+      </div>
+
+      {/* Mobile / small screens: stack panels below the deck */}
+      <div className="w-full flex flex-row gap-4 mt-4 lg:hidden justify-center px-4">
+        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} />
+        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} />
       </div>
     </JoinContext.Provider>
   );
