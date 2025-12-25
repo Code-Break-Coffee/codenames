@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { IoInformationCircle } from "react-icons/io5";
+import { GiConfirmed } from "react-icons/gi";
 import axios from 'axios';
 export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
   const teamStyles = {
@@ -88,11 +89,12 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
       {
         confirmButton && !revealed ? (
           <div
-            className='absolute top-[5px] right-[5px] rounded-[50%] w-[20px] h-[20px] bg-green-400 z-20 hover:cursor-pointer'
+            className='flex justify-center items-center absolute top-[10px] right-[10px] rounded-[50%] w-[20px] h-[20px] z-20 hover:cursor-pointer'
             onClick={clickConfirm}
             title="Confirm Button"
           >
-            <span className="text-xs font-bold">✓</span>
+            <GiConfirmed className='text-xl font-bold text-green-600'/>
+            {/* <span className="text-xs font-bold">✓</span> */}
           </div>
         ) : <></>
       }
