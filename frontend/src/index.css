@@ -243,3 +243,23 @@ html {
   transform-origin: center;
 }
 */
+@media(max-width:1584px)
+{
+  .turns
+  {
+    top:5px;
+  }
+}
+
+@media(max-width:1023px)
+{
+  .deck
+  {
+    position: relative;
+    top:100px;
+  }
+  .turns
+  {
+    top:-50px;
+  }
+}
