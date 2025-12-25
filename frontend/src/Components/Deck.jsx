@@ -352,7 +352,7 @@ useEffect(() => {
     <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
       {/* Persistent turn badge (shows from first render and updates on turn change) */}
       
-      <div className="flex flex-col items-center justify-center gap-4 w-full">
+      <div className="deck flex flex-col items-center justify-center gap-4 w-full">
         <div
           ref={wrapperRef}
           className="flex flex-col items-center gap-4 w-[min(1100px,95vw)] lg:max-w-[calc(100vw-560px)]"
@@ -379,7 +379,7 @@ useEffect(() => {
           </div>
 
           <Teams onDataReceived={handleTeamData} />
-          <TurnBadge />
+          <TurnBadge /> 
 
           {/* ClueInput or Revealer Display - Bottom */}
           <ClueInput onClueSubmit={handleClueSubmit} />
