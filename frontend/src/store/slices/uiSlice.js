@@ -4,6 +4,7 @@ const initialState = {
   overlayActive: false,
   lastClue: null,
   clueDisplayActive: false, // New: persistent clue display for Revealers
+  confirmTargetIds: [],
 };
 
 const uiSlice = createSlice({
@@ -24,15 +25,26 @@ const uiSlice = createSlice({
     hideClueDisplay: (state) => {
       state.clueDisplayActive = false;
     },
-    setConfirmTarget: (state, action) => {
-      state.confirmTargetId = action.payload ?? null;
+    // Toggle a confirm target in the selection set
+    toggleConfirmTarget: (state, action) => {
+      const id = action.payload;
+      if (id == null) return;
+      const idx = state.confirmTargetIds.indexOf(id);
+      if (idx === -1) state.confirmTargetIds.push(id);
+      else state.confirmTargetIds.splice(idx, 1);
     },
-    clearConfirmTarget: (state) => {
-      state.confirmTargetId = null;
+    // Remove an id from selection (used after confirming a card)
+    removeConfirmTarget: (state, action) => {
+      const id = action.payload;
+      if (id == null) return;
+      state.confirmTargetIds = state.confirmTargetIds.filter((i) => i !== id);
+    },
+    // Clear all selections
+    clearConfirmTargets: (state) => {
+      state.confirmTargetIds = [];
     }
   },
 });
-
-export const { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, setConfirmTarget, clearConfirmTarget } = uiSlice.actions;
+export const { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, removeConfirmTarget, clearConfirmTargets } = uiSlice.actions;
 export default uiSlice.reducer;
 

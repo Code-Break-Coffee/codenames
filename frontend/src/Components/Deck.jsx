@@ -1,7 +1,7 @@
 import { useEffect, useState,useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clickCard, setPendingReveal, revealLocal, resetAll } from "../store/slices/cardsSlice";
-import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, setConfirmTarget, clearConfirmTarget } from "../store/slices/uiSlice";
+import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, removeConfirmTarget, clearConfirmTargets } from "../store/slices/uiSlice";
 import { updatePlayers } from "../store/slices/playersSlice";
 import { setCurrentTurn } from "../store/slices/gameSlice";
 import socket from "../socket";
@@ -24,7 +24,7 @@ const Deck = () => {
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
   const clueDisplayActive = useSelector((state) => state.ui?.clueDisplayActive ?? false);
   const lastClue = useSelector((state) => state.ui?.lastClue ?? null);
-  const confirmTargetId = useSelector((state) => state.ui?.confirmTargetId ?? null);
+  const confirmTargetIds = useSelector((state) => state.ui?.confirmTargetIds ?? []);
   const currentTurn = useSelector((state) => state.game?.currentTurn ?? "red");
   const scores = useSelector((state) => state.scores ?? { red: 9, blue: 8 });
   const [joinedTeam, setJoinedTeam] = useState("");
@@ -175,7 +175,8 @@ useEffect(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
       socket.emit("revealCard", { gameId, cardId: card.id,socketId:localStorage.getItem("socketId") }); 
-      dispatch(clearConfirmTarget());
+      // clear all selected confirm buttons after a confirmation
+      dispatch(clearConfirmTargets());
     }, ANIMATION_DURATION);
   };
 
@@ -192,7 +193,7 @@ useEffect(() => {
       return;
     }
     
-    confirmTargetId === cardId ? dispatch(clearConfirmTarget()) : dispatch(setConfirmTarget(cardId));
+    dispatch(toggleConfirmTarget(cardId));
   };
 
 
@@ -367,7 +368,7 @@ useEffect(() => {
                 team={card.team}
                 click={() => onCardClick(card.id)}
                 clickConfirm={(e) => onConfirmCardClick(e, card)}
-                confirmButton={confirmTargetId === card.id}
+                confirmButton={confirmTargetIds.includes(card.id)}
                 revealed={joinedTitle === "Concealers" ? true : card.revealed}
                 pending={card.pendingReveal}
                 serverRevealed={card.revealed}
