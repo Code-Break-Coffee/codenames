@@ -12,6 +12,12 @@ const server = http.createServer(app);
  
 app.use(express.json());
 app.use(cors());
+
+// Health check route
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
+
 app.use('/api', operative_router);
 app.use("/api", cardRoutes);
 
