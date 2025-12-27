@@ -16,6 +16,7 @@ import axios from "axios";
 import { setCards } from "../store/slices/cardsSlice";
 import { updateScores } from "../store/slices/scoreSlice";
 const ANIMATION_DURATION = 600; // ms - match CSS animation length
+import API_URL from '../apiConfig';
 
 const Deck = () => {
   const dispatch = useDispatch();
@@ -135,7 +136,7 @@ useEffect(() => {
 useEffect(() => {
   async function fetchScores() {
     try {
-      const res = await axios.get(`http://localhost:3000/api/score_and_turn/${gameId}`);
+      const res = await axios.get(`${API_URL}/api/score_and_turn/${gameId}`);
       dispatch(updateScores({
         red: res.data.redScore,
         blue: res.data.blueScore,
@@ -204,7 +205,7 @@ useEffect(() => {
       // fetch the actual board for this game.
       dispatch(resetAll());
   try {
-    const res = await axios.get(`http://localhost:3000/api/cards/${gameId}`);
+    const res = await axios.get(`${API_URL}/api/cards/${gameId}`);
     const normalized = (res.data.board || []).map((c, i) => ({
       // keep server _id if present, otherwise fallback to index
       id: c._id ?? i,

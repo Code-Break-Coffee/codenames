@@ -4,6 +4,8 @@ import { useSelector } from "react-redux";
 import TeamPanel from "./TeamPanel";
 import axios from "axios";
 
+import API_URL from '../apiConfig';
+
 
 export const JoinContext = createContext();
 
@@ -25,9 +27,12 @@ const Teams = ({ onDataReceived }) => {
   useEffect(() => {
     if (!gameId) return;
 
+
+// ... existing code ...
+
     const fetchPlayers = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/players/${gameId}`);
+        const res = await axios.get(`${API_URL}/api/players/${gameId}`);
         setAllPlayers(res.data.players || []);
       } catch (err) {
         console.error("Failed to load players", err);

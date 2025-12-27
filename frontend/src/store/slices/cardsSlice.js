@@ -42,13 +42,15 @@ const initialState = {
   error: null,
 };
 
+import API_URL from '../../apiConfig';
+
 // thunk to perform network/socket work; call this after animation
 export const clickCard = createAsyncThunk(
   'cards/clickCard',
   async ({ id, word, team, gameId }, { rejectWithValue }) => {
     try {
       // send the exact payload your server expects
-      const res = await axios.post('http://localhost:3000/api/click', { gameId, word });
+      const res = await axios.post(`${API_URL}/api/click`, { gameId, word });
 
       // optionally use server response (res.data) if you want to sync board/scores
       socket.emit('sendMessage', { message: `${word} clicked`, team });

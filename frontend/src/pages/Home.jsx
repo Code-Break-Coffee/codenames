@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import ThemeToggle from '../Components/ThemeToggle';
+import API_URL from '../apiConfig';
 
 // List of words for the animated background (Increased density)
 const FLOATING_WORDS = [
@@ -49,10 +50,14 @@ const Home = () => {
       alert("Please enter a nickname.");
       return;
     }
+
+
+// ... existing code ...
+
     localStorage.setItem("nickname",nickname);
     setIsLoading(true);
     try {
-      const res = await axios.post("http://localhost:3000/api/generate", { nickname });
+      const res = await axios.post(`${API_URL}/api/generate`, { nickname });
       const newGameId = res.data.gameId;   
       navigate(`/game/${newGameId}`);
     } catch (error) {
