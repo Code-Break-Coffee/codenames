@@ -5,7 +5,7 @@ import ThemeToggle from '../Components/ThemeToggle';
 import API_URL from '../apiConfig';
 
 // List of words for the animated background (Increased density)
-const FLOATING_WORDS = [
+export const FLOATING_WORDS = [
   'AGENT', 'CLUE', 'CONTACT', 'DECRYPT', 'ENCODE', 'MISSION',
   'REVEALER', 'CONCEALER', 'INTEL', 'ASSASSIN', 'RED', 'BLUE', 
   'FIELD', 'CODE', 'TARGET', 'WILD', 'DANGER', 'SECRET', 'PUZZLE',
