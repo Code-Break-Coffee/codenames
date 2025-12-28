@@ -90,8 +90,16 @@ const cardsSlice = createSlice({
         ...c,
         id: i,
         revealed: c.revealed ?? false,
-        pendingReveal: false
+        pendingReveal: false,
+        clickedBy: c.clickedBy ?? []
       }));
+    },
+    updateCardClickedBy(state, action) {
+      const { id, clickedBy } = action.payload;
+      const card = state.cards.find((c) => c.id === id);
+      if (card) {
+        card.clickedBy = clickedBy || [];
+      }
     },
   },
   extraReducers: (builder) => {
@@ -117,5 +125,5 @@ const cardsSlice = createSlice({
   },
 });
 
-export const { setPendingReveal, revealLocal, resetAll, setCards } = cardsSlice.actions;
+export const { setPendingReveal, revealLocal, resetAll, setCards, updateCardClickedBy } = cardsSlice.actions;
 export default cardsSlice.reducer;
