@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { IoInformationCircle } from "react-icons/io5";
 import { GiConfirmed } from "react-icons/gi";
 import axios from 'axios';
-export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
+export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false, clickedBy = [] }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-700 via-red-800 to-red-900',
@@ -79,24 +79,26 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
+        <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
       {
-        !revealed ? (
-          <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
-        ) : (
-          <></>
-        ) 
-      }
-      {
-        confirmButton && !revealed ? (
+        // If someone has clicked this card, show the clicked names as inline chips
+        // aligned horizontally. Keep a tooltip with the full list. Use horizontal
+        // scrolling if there are too many names so they don't overlap the card.
+        clickedBy && clickedBy.length > 0 ? (
           <div
-            className='flex justify-center items-center absolute top-[10px] right-[10px] rounded-[50%] w-[20px] h-[20px] z-20 hover:cursor-pointer'
-            onClick={clickConfirm}
-            title="Confirm Button"
+            className='absolute top-2 right-2 z-20 flex items-center gap-1 max-w-[55%] pr-1'
+            title={clickedBy.join(', ')}
           >
-            <GiConfirmed className='text-xl font-bold text-green-600'/>
-            {/* <span className="text-xs font-bold">✓</span> */}
+            {clickedBy.map((name, idx) => (
+              <div
+                key={idx}
+                className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'
+              >
+                {name.length > 18 ? name.slice(0, 15) + '…' : name}
+              </div>
+            ))}
           </div>
-        ) : <></>
+        ) : null
       }
       {/* background glow (kept) */}
       <div className={`absolute -inset-1 ${style.bg} rounded-[10px] blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
@@ -181,6 +183,20 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
         {/* Bottom highlight */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+        {/* Confirm tick button (revealer confirmation) */}
+        {/* Show confirm button only when confirmButton is true and the card
+            has NOT been revealed on the server (serverRevealed=false). Also
+            make the button smaller so it doesn't visually dominate the card. */}
+        {confirmButton && !serverRevealed ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); if (typeof clickConfirm === 'function') clickConfirm(e); }}
+            title="Confirm reveal"
+            className="absolute bottom-2 right-2 z-40 inline-flex items-center justify-center w-7 h-7 rounded-full bg-transparent border-2 border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <GiConfirmed className="w-4 h-4 text-green-600" />
+          </button>
+        ) : null}
 
         {/* Vignette */}
         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] rounded-[10px] pointer-events-none" />

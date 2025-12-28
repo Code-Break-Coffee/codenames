@@ -4,6 +4,9 @@ const cardSchema = new mongoose.Schema({
   word: { type: String, required: true },
   type: { type: String, enum: ["red", "blue", "neutral", "assassin"], required: true },
   revealed: { type: Boolean, default: false }
+  ,
+  // track which players clicked this card (store display names)
+  clickedBy: { type: [String], default: [] }
 });
 
 const playerSchema = new mongoose.Schema({
