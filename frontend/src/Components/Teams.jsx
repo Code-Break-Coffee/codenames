@@ -7,7 +7,7 @@ import axios from "axios";
 import API_URL from '../apiConfig';
 
 
-export const JoinContext = createContext();
+import { JoinContext } from "../context/JoinContext";
 
 const Teams = ({ onDataReceived }) => {
   const { gameId } = useParams();   // <-- GET GAME ID FROM URL

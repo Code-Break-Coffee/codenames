@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import ThemeToggle from "../Components/ThemeToggle";
 
 // Floating words used on the Home page — keep consistent here
-import {FLOATING_WORDS} from "./Home";
+import { FLOATING_WORDS } from "../constants/floating_words";
 // const FLOATING_WORDS = [
 // 	'AGENT', 'CLUE', 'MISSION', 'INTEL', 'SECRET', 'SPY', 'CARD', 'GUESS', 'TEAM', 'CODE',
 // 	'RED', 'BLUE', 'HIDDEN', 'KEY', 'WORD'

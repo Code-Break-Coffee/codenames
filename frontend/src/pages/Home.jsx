@@ -4,19 +4,7 @@ import axios from "axios";
 import ThemeToggle from '../Components/ThemeToggle';
 import API_URL from '../apiConfig';
 
-// List of words for the animated background (Increased density)
-export const FLOATING_WORDS = [
-  'AGENT', 'CLUE', 'CONTACT', 'DECRYPT', 'ENCODE', 'MISSION',
-  'REVEALER', 'CONCEALER', 'INTEL', 'ASSASSIN', 'RED', 'BLUE', 
-  'FIELD', 'CODE', 'TARGET', 'WILD', 'DANGER', 'SECRET', 'PUZZLE',
-  'SPY', 'CARD', 'GUESS', 'TURN', 'SCORE', 'TEAM', 'COVER', 'TRAITOR', // New words
-  'HIDDEN', 'KEY', 'WORD', 'CYPHER', 'LOCATE', 'VECTOR', 'CONFIRM', 'PASS', // More new words
-  
-  // Doubling the list for higher density
-  'CLUE', 'AGENT', 'ENCODE', 'MISSION', 'REVEALER', 'INTEL', 
-  'RED', 'BLUE', 'FIELD', 'CODE', 'TARGET', 'DANGER', 'SECRET', 'PUZZLE',
-  'SPY', 'CARD', 'GUESS', 'SCORE', 'TEAM', 'HIDDEN', 'KEY', 'WORD' // Doubled new words
-];
+import { FLOATING_WORDS } from '../constants/floating_words';
 
 // Reusable component for a single floating word (for clarity)
 const FloatingWord = ({ word, x, y, size, delay, duration }) => (

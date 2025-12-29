@@ -1,4 +1,4 @@
-import { JoinContext } from "./Teams";
+import { JoinContext } from "../context/JoinContext";
 import { useContext } from "react";
 
 const PlayerList = ({ team, title, players, colorClasses }) => {

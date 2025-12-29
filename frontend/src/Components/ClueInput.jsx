@@ -35,6 +35,7 @@ const ClueInput = ({ onClueSubmit }) => {
       }
     } catch (e) {
       // ignore
+      console.error(e);
     }
 
     const onClueReceived = (clueData) => {
