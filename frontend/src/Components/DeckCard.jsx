@@ -92,8 +92,8 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
                 const visible = clickedBy.slice(0, maxVisible);
                 const extra = clickedBy.length - visible.length;
                 return (
-                  <div className='relative group'>
-                    <div className='flex items-center gap-1'>
+                  <div className='relative'>
+                    <div className='flex items-center gap-1 peer'>
                       {visible.map((name, idx) => (
                         <div
                           key={idx}
@@ -111,7 +111,7 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
                     </div>
 
                     {/* Hover panel showing full list of names (shows when hovering the chips) */}
-                    <div className='opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 transform scale-95 group-hover:scale-100 absolute right-0 mt-2 w-max max-w-xs'>
+                    <div className='opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-150 transform scale-95 peer-hover:scale-100 absolute right-0 mt-2 w-max max-w-xs'>
                       <div className='bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-2 text-xs'>
                         {clickedBy.map((n, i) => (
                           <div key={i} className='py-0.5 px-1 truncate'>{n}</div>
