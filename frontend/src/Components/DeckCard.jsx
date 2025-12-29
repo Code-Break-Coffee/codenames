@@ -81,22 +81,47 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
         <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
       {
-        // If someone has clicked this card, show the clicked names as inline chips
-        // aligned horizontally. Keep a tooltip with the full list. Use horizontal
-        // scrolling if there are too many names so they don't overlap the card.
+        // If someone has clicked this card, show up to two inline chips.
+        // If more than two players clicked, show an overflow chip with "..."
+        // and reveal a hover panel listing all names.
         clickedBy && clickedBy.length > 0 ? (
-          <div
-            className='absolute top-2 right-2 z-20 flex items-center gap-1 max-w-[55%] pr-1'
-            title={clickedBy.join(', ')}
-          >
-            {clickedBy.map((name, idx) => (
-              <div
-                key={idx}
-                className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'
-              >
-                {name.length > 18 ? name.slice(0, 15) + '…' : name}
-              </div>
-            ))}
+          <div className='absolute top-2 right-2 z-20 flex items-center gap-1 max-w-[55%] pr-1'>
+            {
+              (() => {
+                const maxVisible = 1;
+                const visible = clickedBy.slice(0, maxVisible);
+                const extra = clickedBy.length - visible.length;
+                return (
+                  <div className='relative group'>
+                    <div className='flex items-center gap-1'>
+                      {visible.map((name, idx) => (
+                        <div
+                          key={idx}
+                          className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'
+                          title={name}
+                        >
+                          {name.length > 18 ? name.slice(0, 15) + '…' : name}
+                        </div>
+                      ))}
+                      {extra > 0 ? (
+                        <div className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'>
+                          …
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Hover panel showing full list of names (shows when hovering the chips) */}
+                    <div className='opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 transform scale-95 group-hover:scale-100 absolute right-0 mt-2 w-max max-w-xs'>
+                      <div className='bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-2 text-xs'>
+                        {clickedBy.map((n, i) => (
+                          <div key={i} className='py-0.5 px-1 truncate'>{n}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            }
           </div>
         ) : null
       }
