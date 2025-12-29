@@ -1,5 +1,5 @@
-import { JoinContext } from "../context/JoinContext";
-import { useContext } from "react";
+import { JoinContext } from '../context/JoinContext';
+import { useContext } from 'react';
 
 const PlayerList = ({ team, title, players, colorClasses }) => {
   const { teamInfo, titleInfo, handleJoin } = useContext(JoinContext);
@@ -10,25 +10,23 @@ const PlayerList = ({ team, title, players, colorClasses }) => {
   const isAlreadyJoined = joinedTeam === team && joinedTitle === title;
 
   // Rule 1: If already joined "Concealers", cannot join any other title/team (except the one already joined).
-  const blockedByConcealers = joinedTitle === "Concealers" && !isAlreadyJoined;
+  const blockedByConcealers = joinedTitle === 'Concealers' && !isAlreadyJoined;
 
   // Rule 2: If already joined "Revealers", cannot join any "Revealers" (same or other team).
-  const blockedByRevealers = joinedTitle === "Revealers" && title === "Revealers" && !isAlreadyJoined;
+  const blockedByRevealers = joinedTitle === 'Revealers' && title === 'Revealers' && !isAlreadyJoined;
 
   // Final permission: can join only if not blocked and not already joined.
   const canJoin = !isAlreadyJoined && !blockedByConcealers && !blockedByRevealers;
 
   // A helpful message when join is disabled
-  let disabledMessage = "";
-  if (isAlreadyJoined) disabledMessage = "You have joined this role";
+  let disabledMessage = '';
+  if (isAlreadyJoined) disabledMessage = 'You have joined this role';
   else if (blockedByConcealers) disabledMessage = "Cannot join — you've already joined Concealers";
   else if (blockedByRevealers) disabledMessage = "Cannot join Revealers — you've already joined Revealers elsewhere";
 
   return (
     <div className="mb-6">
-      <h4
-        className={`text-md font-semibold mb-2 border-b pb-1 border-sidebar-border/50 ${colorClasses.text}`}
-      >
+      <h4 className={`text-md font-semibold mb-2 border-b pb-1 border-sidebar-border/50 ${colorClasses.text}`}>
         {title}
       </h4>
 
@@ -49,9 +47,15 @@ const PlayerList = ({ team, title, players, colorClasses }) => {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className={`font-medium ${joinedHere ? 'text-green-900 dark:text-green-100' : 'text-sidebar-accent-foreground'}`}>{player}</span>
+              <span
+                className={`font-medium ${joinedHere ? 'text-green-900 dark:text-green-100' : 'text-sidebar-accent-foreground'}`}
+              >
+                {player}
+              </span>
               {isLocal && (
-                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/80 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-semibold">You</span>
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/80 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-semibold">
+                  You
+                </span>
               )}
             </div>
           );
@@ -87,7 +91,7 @@ const PlayerList = ({ team, title, players, colorClasses }) => {
             title={disabledMessage}
             aria-disabled="true"
           >
-            {disabledMessage || "Cannot join"}
+            {disabledMessage || 'Cannot join'}
           </button>
         )}
       </div>

@@ -1,21 +1,28 @@
-import { useEffect, useState,useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { clickCard, setPendingReveal, revealLocal, resetAll, updateCardClickedBy } from "../store/slices/cardsSlice";
-import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, clearConfirmTargets } from "../store/slices/uiSlice";
-import { updatePlayers } from "../store/slices/playersSlice";
-import { setCurrentTurn } from "../store/slices/gameSlice";
-import socket from "../socket";
-import { DeckCard } from "./DeckCard";
-import ThemeToggle from "./ThemeToggle";
-import Teams from "./Teams";
-import ClueInput from "./ClueInput";
-import TurnOverlay from "./TurnOverlay";
-import TurnBadge from "./TurnBadge";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import { useEffect, useState, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { clickCard, setPendingReveal, revealLocal, resetAll, updateCardClickedBy } from '../store/slices/cardsSlice';
+import {
+  showOverlay,
+  hideOverlay,
+  showClueDisplay,
+  hideClueDisplay,
+  toggleConfirmTarget,
+  clearConfirmTargets,
+} from '../store/slices/uiSlice';
+import { updatePlayers } from '../store/slices/playersSlice';
+import { setCurrentTurn } from '../store/slices/gameSlice';
+import socket from '../socket';
+import { DeckCard } from './DeckCard';
+import ThemeToggle from './ThemeToggle';
+import Teams from './Teams';
+import ClueInput from './ClueInput';
+import TurnOverlay from './TurnOverlay';
+import TurnBadge from './TurnBadge';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import API_URL from '../apiConfig';
-import { setCards } from "../store/slices/cardsSlice";
-import { updateScores } from "../store/slices/scoreSlice";
+import { setCards } from '../store/slices/cardsSlice';
+import { updateScores } from '../store/slices/scoreSlice';
 const ANIMATION_DURATION = 600; // ms - match CSS animation length
 
 const Deck = () => {
@@ -25,10 +32,10 @@ const Deck = () => {
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
   const lastClue = useSelector((state) => state.ui?.lastClue ?? null);
   const confirmTargetIds = useSelector((state) => state.ui?.confirmTargetIds ?? []);
-  const currentTurn = useSelector((state) => state.game?.currentTurn ?? "red");
+  const currentTurn = useSelector((state) => state.game?.currentTurn ?? 'red');
   const scores = useSelector((state) => state.scores ?? { red: 9, blue: 8 });
-  const [joinedTeam, setJoinedTeam] = useState("");
-  const [joinedTitle, setJoinedTitle] = useState("");
+  const [joinedTeam, setJoinedTeam] = useState('');
+  const [joinedTitle, setJoinedTitle] = useState('');
   const [finalWinner, setFinalWinner] = useState(null);
   const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
@@ -39,7 +46,7 @@ const Deck = () => {
   const designHeight = 750;
   const wrapperRef = useRef(null);
   const [scale, setScale] = useState(1);
-  const handleTeamData=(team,title)=>{
+  const handleTeamData = (team, title) => {
     setJoinedTeam(team);
     setJoinedTitle(title);
     // Store in localStorage so ClueInput can access it
@@ -49,35 +56,34 @@ const Deck = () => {
     const nickname = localStorage.getItem('nickname') || 'Anonymous';
     console.log('➡️ Emitting joinTeam', { gameId, nickname, team, role: title });
     socket.emit('joinTeam', { gameId, nickname, team, role: title });
-  }
-
-useEffect(() => {
-  // If the page is refreshed and the stored role was "Concealers",
-  // clear the stored role and mark that we need to tell the server
-  // this player should now be a spectator (so the players list updates).
-  const prevTitle = localStorage.getItem('joinedTitle');
-  if (prevTitle === 'Concealers') {
-    console.log("🧹 Detected stale 'Concealers' on refresh — will update server to spectator after join");
-    needsSpectatorUpdate.current = true;
-  }
-
-  // Clear persisted join info (prevents concealer UI bleed-through)
-  localStorage.removeItem('joinedTitle');
-  localStorage.removeItem('joinedTeam');
-  setJoinedTitle('');
-  setJoinedTeam('');
-
-  socket.on("connect", () => {
-    console.log("🟢 Connected with socket ID:", socket.id);
-    localStorage.setItem("socketId", socket.id);
-  });
-
-  return () => {
-    // cleanup
-    socket.off("connect");
   };
-}, []);
 
+  useEffect(() => {
+    // If the page is refreshed and the stored role was "Concealers",
+    // clear the stored role and mark that we need to tell the server
+    // this player should now be a spectator (so the players list updates).
+    const prevTitle = localStorage.getItem('joinedTitle');
+    if (prevTitle === 'Concealers') {
+      console.log("🧹 Detected stale 'Concealers' on refresh — will update server to spectator after join");
+      needsSpectatorUpdate.current = true;
+    }
+
+    // Clear persisted join info (prevents concealer UI bleed-through)
+    localStorage.removeItem('joinedTitle');
+    localStorage.removeItem('joinedTeam');
+    setJoinedTitle('');
+    setJoinedTeam('');
+
+    socket.on('connect', () => {
+      console.log('🟢 Connected with socket ID:', socket.id);
+      localStorage.setItem('socketId', socket.id);
+    });
+
+    return () => {
+      // cleanup
+      socket.off('connect');
+    };
+  }, []);
 
   useEffect(() => {
     // detect score hitting zero -> trigger win overlay, reveal all cards and show winner
@@ -110,14 +116,13 @@ useEffect(() => {
         setFinalWinner(winner);
       }, WIN_OVERLAY_MS);
     }
-    
 
     prevScoresRef.current = now;
   }, [scores, cards, dispatch]);
 
   useEffect(() => {
-    socket.on("receiveMessage", (data) => console.log("Received live message:", data));
-    socket.on("clueReceived", (clueData) => {
+    socket.on('receiveMessage', (data) => console.log('Received live message:', data));
+    socket.on('clueReceived', (clueData) => {
       console.log('🎤 Deck received clueReceived:', clueData);
       // For Revealers, show persistent display
       // For others, show brief overlay
@@ -129,39 +134,41 @@ useEffect(() => {
       }
     });
     return () => {
-      socket.off("receiveMessage");
-      socket.off("clueReceived");
+      socket.off('receiveMessage');
+      socket.off('clueReceived');
     };
   }, [dispatch]);
 
-useEffect(() => {
-  async function fetchScores() {
-    try {
-      const res = await axios.get(`${API_URL}/api/score_and_turn/${gameId}`);
-      dispatch(updateScores({
-        red: res.data.redScore,
-        blue: res.data.blueScore,
-      }));
-    } catch (err) {
-      console.error("Failed to fetch scores", err);
+  useEffect(() => {
+    async function fetchScores() {
+      try {
+        const res = await axios.get(`${API_URL}/api/score_and_turn/${gameId}`);
+        dispatch(
+          updateScores({
+            red: res.data.redScore,
+            blue: res.data.blueScore,
+          })
+        );
+      } catch (err) {
+        console.error('Failed to fetch scores', err);
+      }
     }
-  }
 
-  fetchScores();
-}, []);
+    fetchScores();
+  }, []);
 
   const handleClueSubmit = (clueData) => {
     dispatch(showOverlay(clueData));
     setTimeout(() => dispatch(hideOverlay()), 3000);
   };
 
-  const onConfirmCardClick=(e,card)=>{
+  const onConfirmCardClick = (e, card) => {
     e.stopPropagation();
     if (!card || card.revealed || card.pendingReveal) return;
 
     // Only Revealers can click cards
-    if (joinedTitle !== "Revealers") {
-      console.warn("❌ Only Revealers can click cards");
+    if (joinedTitle !== 'Revealers') {
+      console.warn('❌ Only Revealers can click cards');
       return;
     }
 
@@ -176,8 +183,8 @@ useEffect(() => {
     setTimeout(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
-  // Server will use socket.id to identify the revealer; no need to send socketId from client
-  socket.emit("revealCard", { gameId, cardId: card.id }); 
+      // Server will use socket.id to identify the revealer; no need to send socketId from client
+      socket.emit('revealCard', { gameId, cardId: card.id });
       // clear all selected confirm buttons after a confirmation
       dispatch(clearConfirmTargets());
     }, ANIMATION_DURATION);
@@ -185,11 +192,11 @@ useEffect(() => {
 
   const onCardClick = (cardId) => {
     // Only Revealers can select cards
-    if (joinedTitle !== "Revealers") {
-      console.warn("❌ Only Revealers can select cards");
+    if (joinedTitle !== 'Revealers') {
+      console.warn('❌ Only Revealers can select cards');
       return;
     }
-    
+
     // Check if it's this player's team turn
     if (joinedTeam !== currentTurn) {
       console.warn(`❌ It's ${currentTurn} team's turn, your team is ${joinedTeam}`);
@@ -201,7 +208,7 @@ useEffect(() => {
       console.warn('❌ Cannot select cards: no clue submitted yet');
       return;
     }
-    
+
     dispatch(toggleConfirmTarget(cardId));
     // Log which local player clicked and emit a UI-only selection event
     const myName = localStorage.getItem('nickname') || 'Anonymous';
@@ -215,41 +222,40 @@ useEffect(() => {
     }
   };
 
-
   useEffect(() => {
     async function fetchBoard() {
       // Clear any persisted reveal state immediately to avoid a flash
       // of colored/revealed cards from a previous session while we
       // fetch the actual board for this game.
       dispatch(resetAll());
-  try {
-    const res = await axios.get(`${API_URL}/api/cards/${gameId}`);
-    const normalized = (res.data.board || []).map((c, i) => ({
-      // keep server _id if present, otherwise fallback to index
-      id: c._id ?? i,
-      word: c.word,
-      team: c.type ?? c.team ?? 'neutral',   // map server "type" -> "team"
-      revealed: c.revealed ?? false,
-      clickedBy: c.clickedBy ?? [],
-      // keep raw fields if you need them
-      _raw: c,
-    }));
+      try {
+        const res = await axios.get(`${API_URL}/api/cards/${gameId}`);
+        const normalized = (res.data.board || []).map((c, i) => ({
+          // keep server _id if present, otherwise fallback to index
+          id: c._id ?? i,
+          word: c.word,
+          team: c.type ?? c.team ?? 'neutral', // map server "type" -> "team"
+          revealed: c.revealed ?? false,
+          clickedBy: c.clickedBy ?? [],
+          // keep raw fields if you need them
+          _raw: c,
+        }));
 
-    dispatch(setCards(normalized));
-    
-    // Initialize players from game document
-    if (res.data.players) {
-      dispatch(updatePlayers({ players: res.data.players }));
-    }
+        dispatch(setCards(normalized));
 
-    // Initialize currentTurn from game document
-    if (res.data.currentTurn) {
-      dispatch(setCurrentTurn(res.data.currentTurn));
+        // Initialize players from game document
+        if (res.data.players) {
+          dispatch(updatePlayers({ players: res.data.players }));
+        }
+
+        // Initialize currentTurn from game document
+        if (res.data.currentTurn) {
+          dispatch(setCurrentTurn(res.data.currentTurn));
+        }
+      } catch (err) {
+        console.error('Failed to fetch game:', err);
+      }
     }
-  } catch (err) {
-    console.error("Failed to fetch game:", err);
-  }
-}
 
     fetchBoard();
   }, [gameId, dispatch]);
@@ -259,77 +265,78 @@ useEffect(() => {
     if (hasJoined.current) return;
     hasJoined.current = true;
 
+    console.log('➡️ Emitting joinGame for', gameId);
+    socket.emit('joinGame', { gameId, nickname: localStorage.getItem('nickname') });
 
-    console.log("➡️ Emitting joinGame for", gameId);
-    socket.emit("joinGame", { gameId, nickname: localStorage.getItem("nickname") });
-
-    const onJoined = (data) => console.log("✅ joinedGame ack:", data);
-    const onPlayerJoined = (data) => console.log("👥 another player:", data);
+    const onJoined = (data) => console.log('✅ joinedGame ack:', data);
+    const onPlayerJoined = (data) => console.log('👥 another player:', data);
 
     // If we detected that the client had been a Concealer before the refresh,
     // tell the server to mark this socket/player as a spectator now that we've
     // re-joined the game (server requires the player to exist first).
     const onJoinedWithSpectatorFix = (data) => {
-      console.log("✅ joinedGame ack:", data);
+      console.log('✅ joinedGame ack:', data);
       if (needsSpectatorUpdate.current && gameId) {
         const nickname = localStorage.getItem('nickname') || 'Anonymous';
-        console.log("➡️ Emitting joinTeam -> spectator to update players list after refresh", { gameId, nickname });
+        console.log('➡️ Emitting joinTeam -> spectator to update players list after refresh', { gameId, nickname });
         socket.emit('joinTeam', { gameId, nickname, team: 'spectator', role: 'spectator' });
         needsSpectatorUpdate.current = false;
       }
     };
 
-  socket.on("joinedGame", onJoinedWithSpectatorFix);
-    socket.on("playerJoined", onPlayerJoined);
+    socket.on('joinedGame', onJoinedWithSpectatorFix);
+    socket.on('playerJoined', onPlayerJoined);
 
     const onPlayersUpdated = ({ players }) => {
-      console.log("🔁 players updated:", players);
+      console.log('🔁 players updated:', players);
       dispatch(updatePlayers({ players }));
     };
 
     const onJoinedTeamAck = ({ players }) => {
-      console.log("🎯 joined team ack:", players);
+      console.log('🎯 joined team ack:', players);
       dispatch(updatePlayers({ players }));
     };
 
-    socket.on("playersUpdated", onPlayersUpdated);
-    socket.on("joinedTeamAck", onJoinedTeamAck);
+    socket.on('playersUpdated', onPlayersUpdated);
+    socket.on('joinedTeamAck', onJoinedTeamAck);
 
     return () => {
-      socket.off("joinedGame", onJoined);
-      socket.off("playerJoined", onPlayerJoined);
-      socket.off("playersUpdated", onPlayersUpdated);
-      socket.off("joinedTeamAck", onJoinedTeamAck);
+      socket.off('joinedGame', onJoined);
+      socket.off('playerJoined', onPlayerJoined);
+      socket.off('playersUpdated', onPlayersUpdated);
+      socket.off('joinedTeamAck', onJoinedTeamAck);
     };
   }, [gameId, dispatch]);
 
   useEffect(() => {
-    socket.on("cardRevealed", ({ cardId,updated_score }) => {
+    socket.on('cardRevealed', ({ cardId, updated_score }) => {
       // Trigger animation on other participants' screens
       dispatch(setPendingReveal({ id: cardId, pending: true }));
       console.log(updated_score);
-      dispatch(updateScores({
-        red: updated_score.redScore,
-        blue: updated_score.blueScore
-      }));
+      dispatch(
+        updateScores({
+          red: updated_score.redScore,
+          blue: updated_score.blueScore,
+        })
+      );
       // After animation, reveal the card
       setTimeout(() => {
         dispatch(revealLocal({ id: cardId, revealed: true }));
       }, ANIMATION_DURATION);
     });
 
-    socket.on("turnSwitched", ({ currentTurn }) => {
+    socket.on('turnSwitched', ({ currentTurn }) => {
       // If we've already declared a winner, ignore turn switch overlays
       if (finalWinner) return;
       console.log(`🔄 Turn switched to ${currentTurn}`);
       dispatch(setCurrentTurn(currentTurn));
       // Reset clickedBy for all cards locally so selection chips clear on turn change
       try {
-        cards.forEach(c => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
+        cards.forEach((c) => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
       } catch (err) {
         console.warn('Failed to clear local clickedBy on turn switch', err);
       }
-  // Reset local per-player clicked flag (client-side guard removed)
+      // Reset local per-player clicked flag (client-side guard removed)
       // Hide persistent clue display when turn switches
       dispatch(hideClueDisplay());
       // Show a brief turn overlay (reuses overlayActive/lastClue state)
@@ -342,7 +349,7 @@ useEffect(() => {
     socket.on('cardClicked', ({ cardId, clickedBy }) => {
       dispatch(updateCardClickedBy({ id: cardId, clickedBy }));
       // Log the incoming info for debugging: who clicked which card
-      console.log(`⬅️ [socket] cardClicked received cardId=${cardId} clickedBy=[${(clickedBy||[]).join(', ')}]`);
+      console.log(`⬅️ [socket] cardClicked received cardId=${cardId} clickedBy=[${(clickedBy || []).join(', ')}]`);
 
       // Example: detect if a specific player clicked (change 'Alice' to the name you want to watch)
       const watchName = localStorage.getItem('watchPlayer') || null; // optional: set watchPlayer in localStorage
@@ -358,11 +365,11 @@ useEffect(() => {
     // When server tells us all clickedBy lists were cleared on turn switch
     socket.on('clearAllClickedBy', () => {
       try {
-        cards.forEach(c => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
+        cards.forEach((c) => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
       } catch (err) {
         console.warn('Failed to handle clearAllClickedBy', err);
       }
-  // client-side single-click guard removed; nothing to reset here
+      // client-side single-click guard removed; nothing to reset here
     });
 
     // Server requests that persistent clue displays be cleared (e.g., on turn change)
@@ -375,8 +382,8 @@ useEffect(() => {
     });
 
     return () => {
-      socket.off("cardRevealed");
-      socket.off("turnSwitched");
+      socket.off('cardRevealed');
+      socket.off('turnSwitched');
       socket.off('cardClicked');
       socket.off('clearAllClickedBy');
       socket.off('clearClueDisplay');
@@ -413,41 +420,51 @@ useEffect(() => {
     };
   }, []);
 
-
   return (
     <>
-    <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
-      {/* Persistent turn badge (shows from first render and updates on turn change) */}
-      
-      <div className="deck flex flex-col items-center justify-center gap-4 w-full">
-        <div
-          ref={wrapperRef}
-          className="flex flex-col items-center gap-4 w-[min(1100px,95vw)] lg:max-w-[calc(100vw-560px)]"
-          style={{ maxHeight: 'calc(100vh - 160px)', height: `${designHeight * scale}px`, position: 'relative' }}
-        >
-          {/* Card Deck - Top (keeps exact design proportions by scaling inner content) */}
-          <div style={{ position: 'absolute', left: '50%', top: '50%', width: designWidth, height: designHeight, transform: `translate(-50%,-50%) scale(${scale})`, transformOrigin: 'center' }} className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] dark:bg-black/40 bg-white/40">
-            {cards.map((card) => (
-              <DeckCard
-                key={card.id}
-                word={card.word}
-                team={card.team}
-                clickedBy={card.clickedBy}
-                click={() => onCardClick(card.id)}
-                clickConfirm={(e) => onConfirmCardClick(e, card)}
-                confirmButton={confirmTargetIds.includes(card.id)}
-                revealed={joinedTitle === "Concealers" ? true : card.revealed}
-                pending={card.pendingReveal}
-                serverRevealed={card.revealed}
-                concealerView={joinedTitle === "Concealers"}
-                revealWordsOnGameOver={finalWinner != null}
-              />
-            ))}
+      <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
+        {/* Persistent turn badge (shows from first render and updates on turn change) */}
+
+        <div className="deck flex flex-col items-center justify-center gap-4 w-full">
+          <div
+            ref={wrapperRef}
+            className="flex flex-col items-center gap-4 w-[min(1100px,95vw)] lg:max-w-[calc(100vw-560px)]"
+            style={{ maxHeight: 'calc(100vh - 160px)', height: `${designHeight * scale}px`, position: 'relative' }}
+          >
+            {/* Card Deck - Top (keeps exact design proportions by scaling inner content) */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: designWidth,
+                height: designHeight,
+                transform: `translate(-50%,-50%) scale(${scale})`,
+                transformOrigin: 'center',
+              }}
+              className="p-6 gap-4 grid grid-rows-5 grid-cols-5 border-[1px] dark:border-white/10 rounded-[30px] dark:bg-black/40 bg-white/40"
+            >
+              {cards.map((card) => (
+                <DeckCard
+                  key={card.id}
+                  word={card.word}
+                  team={card.team}
+                  clickedBy={card.clickedBy}
+                  click={() => onCardClick(card.id)}
+                  clickConfirm={(e) => onConfirmCardClick(e, card)}
+                  confirmButton={confirmTargetIds.includes(card.id)}
+                  revealed={joinedTitle === 'Concealers' ? true : card.revealed}
+                  pending={card.pendingReveal}
+                  serverRevealed={card.revealed}
+                  concealerView={joinedTitle === 'Concealers'}
+                  revealWordsOnGameOver={finalWinner != null}
+                />
+              ))}
             </div>
           </div>
 
           <Teams onDataReceived={handleTeamData} />
-          <TurnBadge /> 
+          <TurnBadge />
 
           {/* ClueInput or Revealer Display - Bottom */}
           <ClueInput onClueSubmit={handleClueSubmit} />
@@ -473,33 +490,39 @@ useEffect(() => {
       {overlayActive && lastClue && (lastClue.isTurn || lastClue.isWin) ? (
         // Turn or Win overlay animates itself to the top; keep it separate component
         <TurnOverlay team={lastClue.turn} isWin={lastClue.isWin} onDone={() => dispatch(hideOverlay())} />
-      ) : overlayActive && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
-          {lastClue ? (
-            <div className="text-center">
-              <h2 className="text-5xl font-bold text-white mb-4 animate-pulse">
-                <span className="uppercase">{lastClue.word}</span>
-              </h2>
-              <p className="text-3xl font-extrabold text-primary">
-                {lastClue.number === 'infinity' ? '∞' : lastClue.number}
-              </p>
-            </div>
-          ) : (
-            <h1 className="text-4xl font-bold text-white animate-pulse">Clue Submitted!</h1>
-          )}
-        </div>
+      ) : (
+        overlayActive && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
+            {lastClue ? (
+              <div className="text-center">
+                <h2 className="text-5xl font-bold text-white mb-4 animate-pulse">
+                  <span className="uppercase">{lastClue.word}</span>
+                </h2>
+                <p className="text-3xl font-extrabold text-primary">
+                  {lastClue.number === 'infinity' ? '∞' : lastClue.number}
+                </p>
+              </div>
+            ) : (
+              <h1 className="text-4xl font-bold text-white animate-pulse">Clue Submitted!</h1>
+            )}
+          </div>
+        )
       )}
       {/* Final winner badge shown after reveal */}
       {finalWinner && (
         <div className="absolute left-1/2 -translate-x-1/2 top-6 z-40 pointer-events-none">
-          <div className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-lg text-white select-none ${finalWinner === 'red' ? 'bg-red-600' : 'bg-blue-600'}`}>
+          <div
+            className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-lg text-white select-none ${finalWinner === 'red' ? 'bg-red-600' : 'bg-blue-600'}`}
+          >
             <div className="w-3 h-3 rounded-full bg-white/80" />
-            <div className="font-semibold tracking-wider">{finalWinner === 'red' ? 'Red Team Wins' : 'Blue Team Wins'}</div>
+            <div className="font-semibold tracking-wider">
+              {finalWinner === 'red' ? 'Red Team Wins' : 'Blue Team Wins'}
+            </div>
           </div>
         </div>
       )}
     </>
-    );
-  };
+  );
+};
 
-  export default Deck;
+export default Deck;

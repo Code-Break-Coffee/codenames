@@ -46,9 +46,16 @@ const uiSlice = createSlice({
     // Clear all selections
     clearConfirmTargets: (state) => {
       state.confirmTargetIds = [];
-    }
+    },
   },
 });
-export const { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, removeConfirmTarget, clearConfirmTargets } = uiSlice.actions;
+export const {
+  showOverlay,
+  hideOverlay,
+  showClueDisplay,
+  hideClueDisplay,
+  toggleConfirmTarget,
+  removeConfirmTarget,
+  clearConfirmTargets,
+} = uiSlice.actions;
 export default uiSlice.reducer;
-

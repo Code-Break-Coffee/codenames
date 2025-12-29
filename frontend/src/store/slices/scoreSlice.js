@@ -1,7 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const scoreSlice = createSlice({
-  name: "scores",
+  name: 'scores',
   initialState: { red: 9, blue: 8 },
   reducers: {
     updateScores(state, action) {
@@ -13,8 +13,8 @@ const scoreSlice = createSlice({
         state.red = action.payload.redScore;
         state.blue = action.payload.blueScore;
       }
-    }
-  }
+    },
+  },
 });
 
 export const { updateScores } = scoreSlice.actions;

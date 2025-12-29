@@ -4,38 +4,38 @@ import socket from '../../socket';
 
 // initial cards (same as your deck)
 const initialCardsList = [
-  { word: "Phoenix", team: "blue" },
-  { word: "Dragon", team: "red" },
-  { word: "Ocean", team: "blue" },
-  { word: "Flame", team: "red" },
-  { word: "Crystal", team: "blue" },
-  { word: "Sunset", team: "red" },
-  { word: "Arctic", team: "blue" },
-  { word: "Mars", team: "red" },
-  { word: "Neptune", team: "blue" },
-  { word: "Volcano", team: "red" },
-  { word: "Glacier", team: "blue" },
-  { word: "Torch", team: "red" },
-  { word: "Sapphire", team: "blue" },
-  { word: "Ruby", team: "red" },
-  { word: "River", team: "blue" },
-  { word: "Ember", team: "red" },
-  { word: "Frost", team: "blue" },
-  { word: "Castle", team: "neutral" },
-  { word: "Tower", team: "neutral" },
-  { word: "Bridge", team: "neutral" },
-  { word: "Garden", team: "neutral" },
-  { word: "Pyramid", team: "neutral" },
-  { word: "Temple", team: "neutral" },
-  { word: "Mountain", team: "neutral" },
-  { word: "Assassin", team: "assassin" },
+  { word: 'Phoenix', team: 'blue' },
+  { word: 'Dragon', team: 'red' },
+  { word: 'Ocean', team: 'blue' },
+  { word: 'Flame', team: 'red' },
+  { word: 'Crystal', team: 'blue' },
+  { word: 'Sunset', team: 'red' },
+  { word: 'Arctic', team: 'blue' },
+  { word: 'Mars', team: 'red' },
+  { word: 'Neptune', team: 'blue' },
+  { word: 'Volcano', team: 'red' },
+  { word: 'Glacier', team: 'blue' },
+  { word: 'Torch', team: 'red' },
+  { word: 'Sapphire', team: 'blue' },
+  { word: 'Ruby', team: 'red' },
+  { word: 'River', team: 'blue' },
+  { word: 'Ember', team: 'red' },
+  { word: 'Frost', team: 'blue' },
+  { word: 'Castle', team: 'neutral' },
+  { word: 'Tower', team: 'neutral' },
+  { word: 'Bridge', team: 'neutral' },
+  { word: 'Garden', team: 'neutral' },
+  { word: 'Pyramid', team: 'neutral' },
+  { word: 'Temple', team: 'neutral' },
+  { word: 'Mountain', team: 'neutral' },
+  { word: 'Assassin', team: 'assassin' },
 ];
 
 const initialState = {
   cards: initialCardsList.map((c, i) => ({
     ...c,
     id: i,
-    revealed: false,      // fully revealed (shows team color)
+    revealed: false, // fully revealed (shows team color)
     pendingReveal: false, // animation in progress
   })),
   status: 'idle',
@@ -91,7 +91,7 @@ const cardsSlice = createSlice({
         id: i,
         revealed: c.revealed ?? false,
         pendingReveal: false,
-        clickedBy: c.clickedBy ?? []
+        clickedBy: c.clickedBy ?? [],
       }));
     },
     updateCardClickedBy(state, action) {

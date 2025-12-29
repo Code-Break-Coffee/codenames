@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from "axios";
+import axios from 'axios';
 import ThemeToggle from '../Components/ThemeToggle';
 import API_URL from '../apiConfig';
 
@@ -8,7 +8,7 @@ import { FLOATING_WORDS } from '../constants/floating_words';
 
 // Reusable component for a single floating word (for clarity)
 const FloatingWord = ({ word, x, y, size, delay, duration }) => (
-  <span 
+  <span
     // Increased light theme opacity to /15 for visibility
     className="absolute font-mono pointer-events-none select-none text-foreground/15 dark:text-foreground/15 whitespace-nowrap"
     style={{
@@ -17,7 +17,7 @@ const FloatingWord = ({ word, x, y, size, delay, duration }) => (
       fontSize: `${size}rem`,
       animation: `float ${duration}s linear infinite`,
       animationDelay: `-${delay}s`,
-      opacity: 0.8
+      opacity: 0.8,
     }}
   >
     {word}
@@ -31,44 +31,43 @@ const Home = () => {
   const navigate = useNavigate();
 
   async function handleCreateGame() {
-    let temp_color=localStorage.getItem("theme");
+    let temp_color = localStorage.getItem('theme');
     localStorage.clear();
-    localStorage.setItem("theme",temp_color);
+    localStorage.setItem('theme', temp_color);
     if (!nickname.trim()) {
-      alert("Please enter a nickname.");
+      alert('Please enter a nickname.');
       return;
     }
 
+    // ... existing code ...
 
-// ... existing code ...
-
-    localStorage.setItem("nickname",nickname);
+    localStorage.setItem('nickname', nickname);
     setIsLoading(true);
     try {
       const res = await axios.post(`${API_URL}/api/generate`, { nickname });
-      const newGameId = res.data.gameId;   
+      const newGameId = res.data.gameId;
       navigate(`/game/${newGameId}`);
     } catch (error) {
-      console.error("Failed to create game:", error);
-      alert("Could not create game. Please try again.");
+      console.error('Failed to create game:', error);
+      alert('Could not create game. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleJoinGame = () => {
-    let temp_color=localStorage.getItem("theme");
+    let temp_color = localStorage.getItem('theme');
     localStorage.clear();
-    localStorage.setItem("theme",temp_color);
+    localStorage.setItem('theme', temp_color);
     if (!nickname.trim()) {
-      alert("Please enter a nickname.");
+      alert('Please enter a nickname.');
       return;
     }
     if (!gameId.trim()) {
-      alert("Please enter a valid Game ID.");
+      alert('Please enter a valid Game ID.');
       return;
     }
-    localStorage.setItem("nickname",nickname);
+    localStorage.setItem('nickname', nickname);
     navigate(`/game/${gameId.trim()}`);
   };
 
@@ -89,7 +88,6 @@ const Home = () => {
 
   return (
     <div className="relative w-screen h-screen flex items-center justify-center overflow-hidden bg-background text-foreground">
-      
       {/* Custom Keyframes for floating words - Increased travel distance */}
       <style>{`
         @keyframes float {
@@ -100,12 +98,10 @@ const Home = () => {
           100% { transform: translate(0, 0) rotate(0deg); opacity: 0.8; }
         }
       `}</style>
-      
+
       {/* 1. Floating Words Background Layer (Now covers the whole screen) */}
       {/* Opacity is set to 100% here, letting the individual word component handle transparency */}
-      <div className="absolute inset-0 z-0"> 
-        {wordElements}
-      </div>
+      <div className="absolute inset-0 z-0">{wordElements}</div>
 
       {/* Main Content Card */}
       <div className="relative z-10 p-10 max-w-lg w-full rounded-2xl shadow-2xl bg-card dark:bg-card/90 border border-border backdrop-blur-md">
@@ -152,8 +148,7 @@ const Home = () => {
               onClick={handleCreateGame}
               disabled={isLoading || !nickname.trim() || (gameId && nickname)}
               className={`w-full py-3 px-4 rounded-lg bg-primary text-primary-foreground font-semibold shadow-lg transition-opacity duration-200
-                ${(isLoading || !nickname.trim() || (gameId && nickname)) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`
-              }
+                ${isLoading || !nickname.trim() || (gameId && nickname) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
             >
               {isLoading ? 'Creating...' : 'Create New Game'}
             </button>
@@ -163,11 +158,11 @@ const Home = () => {
               onClick={handleJoinGame}
               disabled={!gameId.trim() || !nickname.trim()}
               className={`w-full py-3 px-4 rounded-lg font-semibold shadow-md transition-all duration-200 
-                ${(!gameId.trim() || !nickname.trim())
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                }`
-              }
+                ${
+                  !gameId.trim() || !nickname.trim()
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
             >
               Join Existing Game
             </button>
