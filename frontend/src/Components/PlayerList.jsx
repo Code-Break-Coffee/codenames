@@ -3,8 +3,8 @@ import { useContext } from "react";
 
 const PlayerList = ({ team, title, players, colorClasses }) => {
   const { teamInfo, titleInfo, handleJoin } = useContext(JoinContext);
-  const [joinedTeam, setJoinedTeam] = teamInfo;
-  const [joinedTitle, setJoinedTitle] = titleInfo;
+  const [joinedTeam] = teamInfo;
+  const [joinedTitle] = titleInfo;
 
   // Whether the user already belongs to this exact team+title
   const isAlreadyJoined = joinedTeam === team && joinedTitle === title;

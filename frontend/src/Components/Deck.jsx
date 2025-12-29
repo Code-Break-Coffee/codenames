@@ -1,7 +1,7 @@
 import { useEffect, useState,useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clickCard, setPendingReveal, revealLocal, resetAll, updateCardClickedBy } from "../store/slices/cardsSlice";
-import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, removeConfirmTarget, clearConfirmTargets } from "../store/slices/uiSlice";
+import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, clearConfirmTargets } from "../store/slices/uiSlice";
 import { updatePlayers } from "../store/slices/playersSlice";
 import { setCurrentTurn } from "../store/slices/gameSlice";
 import socket from "../socket";
@@ -23,7 +23,6 @@ const Deck = () => {
   const { gameId } = useParams();
   const cards = useSelector((state) => state.cards?.cards ?? []);
   const overlayActive = useSelector((state) => state.ui?.overlayActive ?? false);
-  const clueDisplayActive = useSelector((state) => state.ui?.clueDisplayActive ?? false);
   const lastClue = useSelector((state) => state.ui?.lastClue ?? null);
   const confirmTargetIds = useSelector((state) => state.ui?.confirmTargetIds ?? []);
   const currentTurn = useSelector((state) => state.game?.currentTurn ?? "red");
@@ -57,7 +56,6 @@ useEffect(() => {
   // clear the stored role and mark that we need to tell the server
   // this player should now be a spectator (so the players list updates).
   const prevTitle = localStorage.getItem('joinedTitle');
-  const prevTeam = localStorage.getItem('joinedTeam');
   if (prevTitle === 'Concealers') {
     console.log("🧹 Detected stale 'Concealers' on refresh — will update server to spectator after join");
     needsSpectatorUpdate.current = true;

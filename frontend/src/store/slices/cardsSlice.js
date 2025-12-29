@@ -50,7 +50,7 @@ export const clickCard = createAsyncThunk(
   async ({ id, word, team, gameId }, { rejectWithValue }) => {
     try {
       // send the exact payload your server expects
-      const res = await axios.post(`${API_URL}/api/click`, { gameId, word });
+      await axios.post(`${API_URL}/api/click`, { gameId, word });
 
       // optionally use server response (res.data) if you want to sync board/scores
       socket.emit('sendMessage', { message: `${word} clicked`, team });

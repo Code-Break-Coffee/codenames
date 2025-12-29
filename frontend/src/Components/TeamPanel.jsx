@@ -1,6 +1,6 @@
 import PlayerList from "./PlayerList";
 
-const TeamPanel = ({ team, score, concealers, revealers, joinFunction }) => {
+const TeamPanel = ({ team, score, concealers, revealers }) => {
   const colorClasses = team === 'red' 
     ? {
         bg: 'bg-red-500 dark:bg-red-700',
