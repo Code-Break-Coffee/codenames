@@ -1,6 +1,6 @@
 import { useEffect, useState,useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { clickCard, setPendingReveal, revealLocal, resetAll } from "../store/slices/cardsSlice";
+import { clickCard, setPendingReveal, revealLocal, resetAll, updateCardClickedBy } from "../store/slices/cardsSlice";
 import { showOverlay, hideOverlay, showClueDisplay, hideClueDisplay, toggleConfirmTarget, removeConfirmTarget, clearConfirmTargets } from "../store/slices/uiSlice";
 import { updatePlayers } from "../store/slices/playersSlice";
 import { setCurrentTurn } from "../store/slices/gameSlice";
@@ -13,10 +13,10 @@ import TurnOverlay from "./TurnOverlay";
 import TurnBadge from "./TurnBadge";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import API_URL from '../apiConfig';
 import { setCards } from "../store/slices/cardsSlice";
 import { updateScores } from "../store/slices/scoreSlice";
 const ANIMATION_DURATION = 600; // ms - match CSS animation length
-import API_URL from '../apiConfig';
 
 const Deck = () => {
   const dispatch = useDispatch();
@@ -33,6 +33,7 @@ const Deck = () => {
   const [finalWinner, setFinalWinner] = useState(null);
   const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
+  // removed local single-click guard so player names are added to every card clicked
   const prevScoresRef = useRef(scores);
   // Responsive scaling refs for preserving deck proportion across devices
   const designWidth = 1100;
@@ -74,6 +75,7 @@ useEffect(() => {
   });
 
   return () => {
+    // cleanup
     socket.off("connect");
   };
 }, []);
@@ -110,6 +112,7 @@ useEffect(() => {
         setFinalWinner(winner);
       }, WIN_OVERLAY_MS);
     }
+    
 
     prevScoresRef.current = now;
   }, [scores, cards, dispatch]);
@@ -175,7 +178,8 @@ useEffect(() => {
     setTimeout(() => {
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
-      socket.emit("revealCard", { gameId, cardId: card.id,socketId:localStorage.getItem("socketId") }); 
+  // Server will use socket.id to identify the revealer; no need to send socketId from client
+  socket.emit("revealCard", { gameId, cardId: card.id }); 
       // clear all selected confirm buttons after a confirmation
       dispatch(clearConfirmTargets());
     }, ANIMATION_DURATION);
@@ -193,8 +197,24 @@ useEffect(() => {
       console.warn(`❌ It's ${currentTurn} team's turn, your team is ${joinedTeam}`);
       return;
     }
+
+    // Require a clue to be present before Revealers may click
+    if (!lastClue || !lastClue.word) {
+      console.warn('❌ Cannot select cards: no clue submitted yet');
+      return;
+    }
     
     dispatch(toggleConfirmTarget(cardId));
+    // Log which local player clicked and emit a UI-only selection event
+    const myName = localStorage.getItem('nickname') || 'Anonymous';
+    console.log(`➡️ [client] ${myName} selected cardId=${cardId}`);
+    try {
+      // Emit selection to server; include local nickname so the server
+      // can insert it directly into the card.clickedBy list.
+      socket.emit('cardClicked', { gameId, cardId, nickname: myName });
+    } catch (err) {
+      console.warn('Failed to emit cardClicked', err);
+    }
   };
 
 
@@ -212,6 +232,7 @@ useEffect(() => {
       word: c.word,
       team: c.type ?? c.team ?? 'neutral',   // map server "type" -> "team"
       revealed: c.revealed ?? false,
+      clickedBy: c.clickedBy ?? [],
       // keep raw fields if you need them
       _raw: c,
     }));
@@ -304,6 +325,13 @@ useEffect(() => {
       if (finalWinner) return;
       console.log(`🔄 Turn switched to ${currentTurn}`);
       dispatch(setCurrentTurn(currentTurn));
+      // Reset clickedBy for all cards locally so selection chips clear on turn change
+      try {
+        cards.forEach(c => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
+      } catch (err) {
+        console.warn('Failed to clear local clickedBy on turn switch', err);
+      }
+  // Reset local per-player clicked flag (client-side guard removed)
       // Hide persistent clue display when turn switches
       dispatch(hideClueDisplay());
       // Show a brief turn overlay (reuses overlayActive/lastClue state)
@@ -312,11 +340,50 @@ useEffect(() => {
       setTimeout(() => dispatch(hideOverlay()), 3500);
     });
 
+    // Listen for cardClicked updates so UI can show who selected a card immediately
+    socket.on('cardClicked', ({ cardId, clickedBy }) => {
+      dispatch(updateCardClickedBy({ id: cardId, clickedBy }));
+      // Log the incoming info for debugging: who clicked which card
+      console.log(`⬅️ [socket] cardClicked received cardId=${cardId} clickedBy=[${(clickedBy||[]).join(', ')}]`);
+
+      // Example: detect if a specific player clicked (change 'Alice' to the name you want to watch)
+      const watchName = localStorage.getItem('watchPlayer') || null; // optional: set watchPlayer in localStorage
+      const myName = localStorage.getItem('nickname') || 'Anonymous';
+      if (clickedBy && clickedBy.includes(myName)) {
+        console.log(`🔔 [info] You (${myName}) clicked card ${cardId}`);
+      }
+      if (watchName && clickedBy && clickedBy.includes(watchName)) {
+        console.log(`🔎 [watch] ${watchName} clicked card ${cardId}`);
+      }
+    });
+
+    // When server tells us all clickedBy lists were cleared on turn switch
+    socket.on('clearAllClickedBy', () => {
+      try {
+        cards.forEach(c => dispatch(updateCardClickedBy({ id: c.id, clickedBy: [] })));
+      } catch (err) {
+        console.warn('Failed to handle clearAllClickedBy', err);
+      }
+  // client-side single-click guard removed; nothing to reset here
+    });
+
+    // Server requests that persistent clue displays be cleared (e.g., on turn change)
+    socket.on('clearClueDisplay', () => {
+      try {
+        dispatch(hideClueDisplay());
+      } catch (err) {
+        console.warn('Failed to handle clearClueDisplay', err);
+      }
+    });
+
     return () => {
       socket.off("cardRevealed");
       socket.off("turnSwitched");
+      socket.off('cardClicked');
+      socket.off('clearAllClickedBy');
+      socket.off('clearClueDisplay');
     };
-  }, [dispatch, finalWinner]);
+  }, [dispatch, finalWinner, cards]);
 
   // Measure wrapper and compute scale so deck content (including fonts/icons)
   // always preserves the original design proportions regardless of layout.
@@ -367,6 +434,7 @@ useEffect(() => {
                 key={card.id}
                 word={card.word}
                 team={card.team}
+                clickedBy={card.clickedBy}
                 click={() => onCardClick(card.id)}
                 clickConfirm={(e) => onConfirmCardClick(e, card)}
                 confirmButton={confirmTargetIds.includes(card.id)}

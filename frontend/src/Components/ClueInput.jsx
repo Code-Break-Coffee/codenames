@@ -127,7 +127,9 @@ const ClueInput = ({ onClueSubmit }) => {
   const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
   const isConcealers = isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn;
 
-
+  useEffect(()=>{
+    console.log("ClueWord:",clueWord);
+  },[])
 
   return (
     <div>

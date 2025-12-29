@@ -29,6 +29,9 @@ const uiSlice = createSlice({
     toggleConfirmTarget: (state, action) => {
       const id = action.payload;
       if (id == null) return;
+      // defensive: ensure confirmTargetIds is an array (may be undefined after
+      // an older persisted state or if something else mutated the slice)
+      if (!Array.isArray(state.confirmTargetIds)) state.confirmTargetIds = [];
       const idx = state.confirmTargetIds.indexOf(id);
       if (idx === -1) state.confirmTargetIds.push(id);
       else state.confirmTargetIds.splice(idx, 1);
@@ -37,6 +40,7 @@ const uiSlice = createSlice({
     removeConfirmTarget: (state, action) => {
       const id = action.payload;
       if (id == null) return;
+      if (!Array.isArray(state.confirmTargetIds)) state.confirmTargetIds = [];
       state.confirmTargetIds = state.confirmTargetIds.filter((i) => i !== id);
     },
     // Clear all selections

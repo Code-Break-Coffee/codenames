@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { IoInformationCircle } from "react-icons/io5";
 import { GiConfirmed } from "react-icons/gi";
 import axios from 'axios';
-export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false }) {
+export function DeckCard({ word, team, click, clickConfirm, confirmButton = false, revealed = false, pending = false, serverRevealed = false, concealerView = false, revealWordsOnGameOver = false, clickedBy = [] }) {
   const teamStyles = {
     red: {
       bg: 'bg-gradient-to-br from-red-700 via-red-800 to-red-900',
@@ -79,24 +79,51 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
+        <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
       {
-        !revealed ? (
-          <IoInformationCircle onClick={(e)=>handleInfoClick(e)} className='absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer' />
-        ) : (
-          <></>
-        ) 
-      }
-      {
-        confirmButton && !revealed ? (
-          <div
-            className='flex justify-center items-center absolute top-[10px] right-[10px] rounded-[50%] w-[20px] h-[20px] z-20 hover:cursor-pointer'
-            onClick={clickConfirm}
-            title="Confirm Button"
-          >
-            <GiConfirmed className='text-xl font-bold text-green-600'/>
-            {/* <span className="text-xs font-bold">✓</span> */}
+        // If someone has clicked this card, show up to two inline chips.
+        // If more than two players clicked, show an overflow chip with "..."
+        // and reveal a hover panel listing all names.
+        clickedBy && clickedBy.length > 0 ? (
+          <div className='absolute top-2 right-2 z-20 flex items-center gap-1 max-w-[55%] pr-1'>
+            {
+              (() => {
+                const maxVisible = 1;
+                const visible = clickedBy.slice(0, maxVisible);
+                const extra = clickedBy.length - visible.length;
+                return (
+                  <div className='relative'>
+                    <div className='flex items-center gap-1 peer'>
+                      {visible.map((name, idx) => (
+                        <div
+                          key={idx}
+                          className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'
+                          title={name}
+                        >
+                          {name.length > 18 ? name.slice(0, 15) + '…' : name}
+                        </div>
+                      ))}
+                      {extra > 0 ? (
+                        <div className='inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-black/80 text-gray-800 dark:text-gray-100 shadow'>
+                          …
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Hover panel showing full list of names (shows when hovering the chips) */}
+                    <div className='opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-150 transform scale-95 peer-hover:scale-100 absolute right-0 mt-2 w-max max-w-xs'>
+                      <div className='bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-2 text-xs'>
+                        {clickedBy.map((n, i) => (
+                          <div key={i} className='py-0.5 px-1 truncate'>{n}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            }
           </div>
-        ) : <></>
+        ) : null
       }
       {/* background glow (kept) */}
       <div className={`absolute -inset-1 ${style.bg} rounded-[10px] blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
@@ -181,6 +208,20 @@ export function DeckCard({ word, team, click, clickConfirm, confirmButton = fals
 
         {/* Bottom highlight */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+        {/* Confirm tick button (revealer confirmation) */}
+        {/* Show confirm button only when confirmButton is true and the card
+            has NOT been revealed on the server (serverRevealed=false). Also
+            make the button smaller so it doesn't visually dominate the card. */}
+        {confirmButton && !serverRevealed ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); if (typeof clickConfirm === 'function') clickConfirm(e); }}
+            title="Confirm reveal"
+            className="absolute bottom-2 right-2 z-40 inline-flex items-center justify-center w-7 h-7 rounded-full bg-transparent border-2 border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <GiConfirmed className="w-4 h-4 text-green-600" />
+          </button>
+        ) : null}
 
         {/* Vignette */}
         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] rounded-[10px] pointer-events-none" />
