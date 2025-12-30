@@ -23,7 +23,7 @@ import axios from 'axios';
 import API_URL from '../apiConfig';
 import { setCards } from '../store/slices/cardsSlice';
 import { updateScores } from '../store/slices/scoreSlice';
-const ANIMATION_DURATION = 600; // ms - match CSS animation length
+const ANIMATION_DURATION = 700; // ms - match CSS animation length
 
 const Deck = () => {
   const dispatch = useDispatch();
@@ -124,6 +124,18 @@ const Deck = () => {
     socket.on('receiveMessage', (data) => console.log('Received live message:', data));
     socket.on('clueReceived', (clueData) => {
       console.log('🎤 Deck received clueReceived:', clueData);
+      // If server indicates the clue was cleared (turn switched), ensure we
+      // hide any overlay or persistent revealer display and do not show an empty overlay.
+      if (clueData && clueData.cleared) {
+        try {
+          dispatch(hideClueDisplay());
+          dispatch(hideOverlay());
+        } catch (err) {
+          console.warn('Failed to hide clue display/overlay on cleared clue', err);
+        }
+        return;
+      }
+
       // For Revealers, show persistent display
       // For others, show brief overlay
       if (localStorage.getItem('joinedTitle') === 'Revealers') {
@@ -492,8 +504,9 @@ const Deck = () => {
         <TurnOverlay team={lastClue.turn} isWin={lastClue.isWin} onDone={() => dispatch(hideOverlay())} />
       ) : (
         overlayActive && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
+          <>
             {lastClue ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
               <div className="text-center">
                 <h2 className="text-5xl font-bold text-white mb-4 animate-pulse">
                   <span className="uppercase">{lastClue.word}</span>
@@ -502,10 +515,11 @@ const Deck = () => {
                   {lastClue.number === 'infinity' ? '∞' : lastClue.number}
                 </p>
               </div>
-            ) : (
-              <h1 className="text-4xl font-bold text-white animate-pulse">Clue Submitted!</h1>
+            </div>  
+          ) : (
+              <></>
             )}
-          </div>
+          </>
         )
       )}
       {/* Final winner badge shown after reveal */}
