@@ -17,6 +17,8 @@ const uiSlice = createSlice({
     },
     hideOverlay: (state) => {
       state.overlayActive = false;
+      // Also clear lastClue to avoid stale clue data appearing in later overlays
+      state.lastClue = null;
     },
     showClueDisplay: (state, action) => {
       state.clueDisplayActive = true;
@@ -24,6 +26,8 @@ const uiSlice = createSlice({
     },
     hideClueDisplay: (state) => {
       state.clueDisplayActive = false;
+      // Clear lastClue so Revealers don't keep an outdated clue after turn switches
+      state.lastClue = null;
     },
     // Toggle a confirm target in the selection set
     toggleConfirmTarget: (state, action) => {

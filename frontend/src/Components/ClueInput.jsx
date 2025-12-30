@@ -43,10 +43,28 @@ const ClueInput = ({ onClueSubmit }) => {
 
     const onClueReceived = (clueData) => {
       console.log('📬 clueReceived:', clueData);
+      // If server signals a cleared clue (turn switched), reset local clue state
+      if (clueData && clueData.cleared) {
+        setClueWord('');
+        setClueNumber('1');
+        setIsSubmitted(false);
+        setCardsRevealed(0);
+        // clear persisted active clue so overlay consumers hide
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('activeClueWord');
+          localStorage.removeItem('activeClueNumber');
+        }
+        return;
+      }
       setClueWord(clueData.word);
       setClueNumber(clueData.number);
       setIsSubmitted(true);
       setCardsRevealed(0); // Reset counter for new turn
+      // persist active clue for overlay short-circuiting
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('activeClueWord', String(clueData.word || ''));
+        localStorage.setItem('activeClueNumber', String(clueData.number || '1'));
+      }
     };
     socket.on('clueReceived', onClueReceived);
 
@@ -62,6 +80,10 @@ const ClueInput = ({ onClueSubmit }) => {
         setClueWord('');
         setClueNumber('1');
         setCardsRevealed(0);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('activeClueWord');
+          localStorage.removeItem('activeClueNumber');
+        }
       }
     };
     socket.on('requestClue', onRequestClue);
@@ -77,6 +99,10 @@ const ClueInput = ({ onClueSubmit }) => {
         setClueWord('');
         setClueNumber('1');
         setCardsRevealed(0);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('activeClueWord');
+          localStorage.removeItem('activeClueNumber');
+        }
       }
     };
     socket.on('turnSwitched', onTurnSwitched);
@@ -103,6 +129,11 @@ const ClueInput = ({ onClueSubmit }) => {
 
         // Emit switchTurn event
         socket.emit('switchTurn', { gameId });
+        // Clear persisted active clue when the clue expires
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('activeClueWord');
+          localStorage.removeItem('activeClueNumber');
+        }
       }
     };
     socket.on('cardRevealed', onCardRevealed);
@@ -121,6 +152,11 @@ const ClueInput = ({ onClueSubmit }) => {
     console.log('➡️ Emitting clueSubmitted:', clueData);
     socket.emit('clueSubmitted', clueData);
     onClueSubmit?.(clueData);
+    // persist active clue so overlay consumers know there's a real clue
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeClueWord', clueWord);
+      localStorage.setItem('activeClueNumber', clueNumber);
+    }
   };
 
   // Normalize and allow slight variations (e.g., 'Concealer', 'Concealers')

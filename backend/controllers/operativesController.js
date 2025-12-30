@@ -161,7 +161,10 @@ function handleSocketEvents(io, socket) {
   // Notify clients to reset their local clickedBy UI state
   io.to(gameId).emit('clearAllClickedBy');
   // Notify clients to hide any persistent clue displays
-  io.to(gameId).emit('clearClueDisplay');
+   io.to(gameId).emit('clearClueDisplay');
+   // Also emit a cleared clueReceived payload so clients that listen
+   // only for 'clueReceived' (e.g., ClueInput) can reset their local state.
+   io.to(gameId).emit('clueReceived', { cleared: true });
       } catch (err) {
         console.error('Error clearing clickedBy on turn switch:', err);
         io.to(gameId).emit("turnSwitched", { currentTurn: newTurn });
@@ -209,6 +212,8 @@ function handleSocketEvents(io, socket) {
           io.to(gameId).emit('turnSwitched', { currentTurn: newTurn });
           io.to(gameId).emit('clearAllClickedBy');
           io.to(gameId).emit('clearClueDisplay');
+          // Also notify Revealers/clients that the clue should be cleared
+          io.to(gameId).emit('clueReceived', { cleared: true });
         } catch (err) {
           console.error('Error clearing clickedBy on opponent reveal turn switch:', err);
           io.to(gameId).emit('turnSwitched', { currentTurn: newTurn });
