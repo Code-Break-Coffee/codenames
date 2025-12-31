@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { clickCard, setPendingReveal, revealLocal, resetAll, updateCardClickedBy } from '../store/slices/cardsSlice';
 import {
@@ -17,12 +18,12 @@ import ThemeToggle from './ThemeToggle';
 import Teams from './Teams';
 import ClueInput from './ClueInput';
 import TurnOverlay from './TurnOverlay';
-import TurnBadge from './TurnBadge';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../apiConfig';
 import { setCards } from '../store/slices/cardsSlice';
 import { updateScores } from '../store/slices/scoreSlice';
+import TopGameControls from './TopGameControls';
 const ANIMATION_DURATION = 700; // ms - match CSS animation length
 
 const Deck = () => {
@@ -37,6 +38,7 @@ const Deck = () => {
   const [joinedTeam, setJoinedTeam] = useState('');
   const [joinedTitle, setJoinedTitle] = useState('');
   const [finalWinner, setFinalWinner] = useState(null);
+  const navigate = useNavigate();
   const needsSpectatorUpdate = useRef(false);
   const hasJoined = useRef(false);
   // removed local single-click guard so player names are added to every card clicked
@@ -272,6 +274,51 @@ const Deck = () => {
     fetchBoard();
   }, [gameId, dispatch]);
 
+  // determine if this client is the creator/owner of the current game
+  const isCreator = (() => {
+    try {
+      return localStorage.getItem(`createdGame_${gameId}`) === 'true';
+    } catch (err) {
+      return false;
+    }
+  })();
+
+  const handleStartNewGame = async () => {
+    const nickname = localStorage.getItem('nickname') || 'Anonymous';
+    try {
+      if (gameId) {
+        // reset the current game in-place for everyone
+        const res = await axios.post(`${API_URL}/api/reset/${gameId}`, { nickname });
+        // server emits 'gameReset' to the room; local handling will update state.
+        // as a fallback, if server returned board, apply it immediately
+        if (res && res.data && res.data.board) {
+          const normalized = (res.data.board || []).map((c, i) => ({
+            id: c._id ?? i,
+            word: c.word,
+            team: c.type ?? c.team ?? 'neutral',
+            revealed: c.revealed ?? false,
+            clickedBy: c.clickedBy ?? [],
+            _raw: c,
+          }));
+          dispatch(setCards(normalized));
+        }
+      } else {
+        // fallback: create a new game if no current gameId
+        const res = await axios.post(`${API_URL}/api/generate`, { nickname });
+        const newGameId = res.data.gameId;
+        try {
+          localStorage.setItem(`createdGame_${newGameId}`, 'true');
+        } catch (err) {
+          console.warn('Could not persist createdGame flag for new game', err);
+        }
+        navigate(`/game/${newGameId}`);
+      }
+    } catch (err) {
+      console.error('Failed to start new game', err);
+      alert('Could not start new game. Please try again.');
+    }
+  };
+
   useEffect(() => {
     if (!gameId) return;
     if (hasJoined.current) return;
@@ -335,6 +382,39 @@ const Deck = () => {
       setTimeout(() => {
         dispatch(revealLocal({ id: cardId, revealed: true }));
       }, ANIMATION_DURATION);
+    });
+
+    // Handle server reset of the whole game (creator triggered)
+    socket.on('gameReset', ({ board, currentTurn, redScore, blueScore, players }) => {
+      try {
+        // normalize board into client shape
+        const normalized = (board || []).map((c, i) => ({
+          id: c._id ?? i,
+          word: c.word,
+          team: c.type ?? c.team ?? 'neutral',
+          revealed: c.revealed ?? false,
+          clickedBy: c.clickedBy ?? [],
+          _raw: c,
+        }));
+
+        dispatch(setCards(normalized));
+        if (players) dispatch(updatePlayers({ players }));
+        if (currentTurn) dispatch(setCurrentTurn(currentTurn));
+        dispatch(
+          updateScores({
+            red: typeof redScore === 'number' ? redScore : 9,
+            blue: typeof blueScore === 'number' ? blueScore : 8,
+          })
+        );
+        // clear overlays and winner state
+        try {
+          dispatch(hideClueDisplay());
+          dispatch(hideOverlay());
+        } catch (err) {}
+        setFinalWinner(null);
+      } catch (err) {
+        console.error('Failed to apply gameReset', err);
+      }
     });
 
     socket.on('turnSwitched', ({ currentTurn }) => {
@@ -436,6 +516,7 @@ const Deck = () => {
     <>
       <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
         {/* Persistent turn badge (shows from first render and updates on turn change) */}
+        <TopGameControls isCreator={isCreator} onStartNewGame={handleStartNewGame} />
 
         <div className="deck flex flex-col items-center justify-center gap-4 w-full">
           <div
@@ -476,7 +557,6 @@ const Deck = () => {
           </div>
 
           <Teams onDataReceived={handleTeamData} />
-          <TurnBadge />
 
           {/* ClueInput or Revealer Display - Bottom */}
           <ClueInput onClueSubmit={handleClueSubmit} />
@@ -507,16 +587,16 @@ const Deck = () => {
           <>
             {lastClue ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 animate-fade">
-              <div className="text-center">
-                <h2 className="text-5xl font-bold text-white mb-4 animate-pulse">
-                  <span className="uppercase">{lastClue.word}</span>
-                </h2>
-                <p className="text-3xl font-extrabold text-primary">
-                  {lastClue.number === 'infinity' ? '∞' : lastClue.number}
-                </p>
+                <div className="text-center">
+                  <h2 className="text-5xl font-bold text-white mb-4 animate-pulse">
+                    <span className="uppercase">{lastClue.word}</span>
+                  </h2>
+                  <p className="text-3xl font-extrabold text-primary">
+                    {lastClue.number === 'infinity' ? '∞' : lastClue.number}
+                  </p>
+                </div>
               </div>
-            </div>  
-          ) : (
+            ) : (
               <></>
             )}
           </>
