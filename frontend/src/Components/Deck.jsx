@@ -278,7 +278,7 @@ const Deck = () => {
   const isCreator = (() => {
     try {
       return localStorage.getItem(`createdGame_${gameId}`) === 'true';
-    } catch (err) {
+    } catch {
       return false;
     }
   })();
@@ -410,7 +410,9 @@ const Deck = () => {
         try {
           dispatch(hideClueDisplay());
           dispatch(hideOverlay());
-        } catch (err) {}
+        } catch {
+          console.log('');
+        }
         setFinalWinner(null);
       } catch (err) {
         console.error('Failed to apply gameReset', err);
