@@ -49,6 +49,65 @@ const genrate_game= async (req,res)=>{
   }
 };
 
+const reset_game = async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    const nickname = req.body.nickname; // optional, retained for parity
+    const Words = require('../model/Words');
+
+    const words = await Words.aggregate([{ $sample: { size: 25 } }]);
+    const assignments = [
+      ...Array(9).fill('red'),
+      ...Array(8).fill('blue'),
+      ...Array(7).fill('neutral'),
+      'assassin',
+    ];
+    assignments.sort(() => Math.random() - 0.5);
+    const board = words.map((w, index) => ({
+      word: w.text,
+      type: assignments[index],
+      revealed: false,
+      clickedBy: [],
+    }));
+
+    const newTurn = Math.random() > 0.5 ? 'red' : 'blue';
+
+    const updated = await Game.findByIdAndUpdate(
+      gameId,
+      {
+        $set: {
+          board,
+          redScore: 9,
+          blueScore: 8,
+          currentTurn: newTurn,
+          turnGuessesLeft: 0,
+          finished: false,
+          winner: null,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: 'Game not found' });
+
+    // Emit to all sockets in the room so every connected client refreshes
+    const io = req.app.get('io');
+    if (io) {
+      io.to(gameId).emit('gameReset', {
+        board: updated.board,
+        currentTurn: updated.currentTurn,
+        redScore: updated.redScore,
+        blueScore: updated.blueScore,
+        players: updated.players || [],
+      });
+    }
+
+    return res.status(200).json({ message: 'ok', board: updated.board, gameId: updated._id });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 const getPlayers=async(req,res)=>{
       try{
@@ -74,4 +133,4 @@ const getTurnAndScores=async(req,res)=>{
 
 
 
-module.exports={getCards,genrate_game,getPlayers,getTurnAndScores};
+module.exports={getCards,genrate_game,reset_game,getPlayers,getTurnAndScores};

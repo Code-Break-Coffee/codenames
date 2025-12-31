@@ -46,6 +46,12 @@ const Home = () => {
     try {
       const res = await axios.post(`${API_URL}/api/generate`, { nickname });
       const newGameId = res.data.gameId;
+      // mark this client as the creator/owner for that game id
+      try {
+        localStorage.setItem(`createdGame_${newGameId}`, 'true');
+      } catch (err) {
+        console.warn('Could not persist createdGame flag', err);
+      }
       navigate(`/game/${newGameId}`);
     } catch (error) {
       console.error('Failed to create game:', error);

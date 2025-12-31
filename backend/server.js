@@ -32,6 +32,9 @@ const io = new Server(server, {
 });
 
  
+// make io available to express routes/controllers via app locals
+app.set('io', io);
+
 socketConnection(io);
 
 const PORT = process.env.PORT || 3000;
