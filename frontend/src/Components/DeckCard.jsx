@@ -90,12 +90,25 @@ export function DeckCard({
     }
   };
 
+  const isRevealedContext = serverRevealed || concealerView;
+
+  const infoIconClass = `
+  transition-colors
+
+  text-black
+
+  ${isRevealedContext && team === 'assassin' ? 'text-white' : ''}
+
+  ${isRevealedContext ? (team === 'neutral' ? 'dark:text-black' : 'dark:text-white') : 'dark:text-white'}
+`;
+
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
       <IoInformationCircle
         onClick={(e) => handleInfoClick(e)}
-        className="absolute top-[5px] left-[5px] text-[30px] z-30 text-gray-800 dark:text-white opacity-90 hover:cursor-pointer"
+        className={`absolute top-[5px] left-[5px] text-[30px] z-30 opacity-90 hover:cursor-pointer ${infoIconClass}`}
       />
+
       {
         // If someone has clicked this card, show up to two inline chips.
         // If more than two players clicked, show an overflow chip with "..."
