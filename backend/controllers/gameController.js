@@ -33,13 +33,14 @@ const genrate_game= async (req,res)=>{
             type: assignments[index],
             revealed: false
         }));
-  
-    const newGame = new Game({
-      board,
-      redScore: 9,
-      blueScore: 8,
-      currentTurn: Math.random() > 0.5 ? "red" : "blue"
-    });
+    
+      const currentTurn= Math.random() > 0.5 ? 'red' : 'blue';
+      const newGame = new Game({
+        board,
+        redScore: currentTurn==='red' ? 9 : 8 ,
+        blueScore: currentTurn==='blue' ? 9 : 8,
+        currentTurn: currentTurn
+      });
 
     await newGame.save();
 
@@ -77,12 +78,13 @@ const reset_game = async (req, res) => {
       {
         $set: {
           board,
-          redScore: 9,
-          blueScore: 8,
+          redScore: newTurn==='red' ? 9 : 8,
+          blueScore: newTurn==='blue' ? 9 : 8,
           currentTurn: newTurn,
           turnGuessesLeft: 0,
           finished: false,
           winner: null,
+          players:[]
         },
       },
       { new: true }
