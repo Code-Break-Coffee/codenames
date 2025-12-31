@@ -90,38 +90,24 @@ export function DeckCard({
     }
   };
 
- const isRevealedContext = serverRevealed || concealerView;
+  const isRevealedContext = serverRevealed || concealerView;
 
-const infoIconClass = `
+  const infoIconClass = `
   transition-colors
 
   text-black
 
-  ${
-    isRevealedContext && team === 'assassin'
-      ? 'text-white'
-      : ''
-  }
+  ${isRevealedContext && team === 'assassin' ? 'text-white' : ''}
 
-  ${
-    isRevealedContext
-      ? team === 'neutral'
-        ? 'dark:text-black'
-        : 'dark:text-white'
-      : 'dark:text-white'
-  }
+  ${isRevealedContext ? (team === 'neutral' ? 'dark:text-black' : 'dark:text-white') : 'dark:text-white'}
 `;
-
-
-
 
   return (
     <div className={`group relative w-full h-full ${animClass} ${revealedClass}`} onClick={click}>
       <IoInformationCircle
-  onClick={(e) => handleInfoClick(e)}
-  className={`absolute top-[5px] left-[5px] text-[30px] z-30 opacity-90 hover:cursor-pointer ${infoIconClass}`}
-/>
-
+        onClick={(e) => handleInfoClick(e)}
+        className={`absolute top-[5px] left-[5px] text-[30px] z-30 opacity-90 hover:cursor-pointer ${infoIconClass}`}
+      />
 
       {
         // If someone has clicked this card, show up to two inline chips.
