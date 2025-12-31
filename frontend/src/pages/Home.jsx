@@ -112,7 +112,7 @@ const Home = () => {
       {/* Main Content Card */}
       <div className="relative z-10 p-10 max-w-lg w-full rounded-2xl shadow-2xl bg-card dark:bg-card/90 border border-border backdrop-blur-md">
         <h1 className="text-4xl font-extrabold text-center mb-8 text-primary dark:text-foreground tracking-tight">
-          Codenames Clone
+          Bhai Logic ?
         </h1>
 
         <div className="space-y-6">

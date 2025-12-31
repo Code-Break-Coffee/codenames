@@ -1,4 +1,4 @@
-name: Codenames CI/CD Pipeline
+name: Bhai Logic CI/CD Pipeline
 
 on:
   push:
