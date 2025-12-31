@@ -83,6 +83,7 @@ const reset_game = async (req, res) => {
           turnGuessesLeft: 0,
           finished: false,
           winner: null,
+          players:[]
         },
       },
       { new: true }
