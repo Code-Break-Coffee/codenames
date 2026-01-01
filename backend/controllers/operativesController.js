@@ -5,6 +5,9 @@ const Game = require("../model/Game.js");
 // so it's shared across all socket handlers for a given server process.
 let clickedPlayersThisTurn = {};
 
+// Track cards revealed this turn for each game (reset on turn switch)
+let turnCardCounts = {};
+
 function handleSocketEvents(io, socket) {
 
   socket.on("joinGame", async ({gameId,nickname}) => {
@@ -51,7 +54,63 @@ function handleSocketEvents(io, socket) {
 
   // No longer need in-memory turnCardCounts; use DB field turnGuessesLeft
   // Track cards revealed this turn for each game (reset on turn switch)
-  let turnCardCounts = {};
+
+  socket.on("endGuess", async ({ gameId }) => {
+    try {
+      const game = await Game.findById(gameId);
+      if (!game || game.finished) return;
+
+      const player = game.players.find(p => String(p.socketId) === String(socket.id));
+      const isRevealerForCurrentTeam =
+        player &&
+        player.role &&
+        player.role.toLowerCase().startsWith('reveal') &&
+        player.team &&
+        player.team.toLowerCase() === game.currentTurn.toLowerCase();
+
+      if (!isRevealerForCurrentTeam) {
+        console.warn(`⚠️ endGuess unauthorized for socket ${socket.id} in game ${gameId}`);
+        return;
+      }
+
+      console.log(`✅ Turn ended by player ${player.name} in game ${gameId}`);
+      
+      const newTurn = game.currentTurn === "red" ? "blue" : "red";
+      await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn, turnGuessesLeft: 0 } });
+
+      // Clear clickedBy arrays on all cards
+      const g = await Game.findById(gameId);
+      if (g && g.board) {
+        g.board.forEach(c => { c.clickedBy = []; });
+        await g.save();
+      }
+
+      io.to(gameId).emit("turnSwitched", { currentTurn: newTurn });
+      io.to(gameId).emit('clearAllClickedBy');
+      io.to(gameId).emit('clearClueDisplay');
+      io.to(gameId).emit('clueReceived', { cleared: true });
+
+      // Prompt the new team's Concealer
+      const updatedGame = await Game.findById(gameId);
+      if (updatedGame && updatedGame.players) {
+        updatedGame.players.forEach(p => {
+          if (
+            p.role && p.role.toLowerCase().startsWith('conceal') &&
+            p.team && p.team.toLowerCase() === newTurn
+          ) {
+            io.to(p.socketId).emit("requestClue", { currentTurn: newTurn });
+          }
+        });
+      }
+      
+      // Reset counters
+      turnCardCounts[gameId] = 0;
+      clickedPlayersThisTurn[gameId] = [];
+
+    } catch (err) {
+      console.error('endGuess error', err);
+    }
+  });
 
   socket.on("revealCard", async ({ gameId, cardId }) => {
     const effectiveSocketId = socket.id;
@@ -300,8 +359,13 @@ function handleSocketEvents(io, socket) {
 
       if (card) {
         card.clickedBy = card.clickedBy || [];
-        // Only add (do NOT remove) so a player can only click once per turn
-        if (!card.clickedBy.includes(incomingName)) {
+        const playerIndex = card.clickedBy.indexOf(incomingName);
+
+        if (playerIndex > -1) {
+          // Player found, remove their name
+          card.clickedBy.splice(playerIndex, 1);
+        } else {
+          // Player not found, add their name
           card.clickedBy.push(incomingName);
         }
 
