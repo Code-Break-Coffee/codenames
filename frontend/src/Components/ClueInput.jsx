@@ -159,6 +159,12 @@ const ClueInput = ({ onClueSubmit }) => {
     }
   };
 
+  const handleEndGuess = () => {
+    // a player can always end the guess if they are a revealer on the current team
+    console.log(`➡️ [client] ${joinedTitle} ending guess`);
+    socket.emit('endGuess', { gameId });
+  };
+
   // Normalize and allow slight variations (e.g., 'Concealer', 'Concealers')
   const normalizedRole = String(joinedTitle || '').toLowerCase();
   const normalizedTeam = String(joinedTeam || '').toLowerCase();
@@ -166,6 +172,9 @@ const ClueInput = ({ onClueSubmit }) => {
 
   const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
   const isConcealers = isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn;
+
+  const isRoleRevealer = normalizedRole.startsWith('reveal');
+  const isRevealers = isRoleRevealer && normalizedTeam && normalizedTeam === normalizedTurn;
 
   useEffect(() => {
     console.log('ClueWord:', clueWord);
@@ -213,7 +222,7 @@ const ClueInput = ({ onClueSubmit }) => {
           </form>
         </div>
       ) : clueWord ? (
-        <div className="text-center">
+        <div className="text-center relative group">
           <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white mb-2">
             <span className="uppercase">{clueWord}</span>{' '}
             <span className="text-primary font-extrabold">({clueNumber === 'infinity' ? '∞' : clueNumber})</span>
@@ -221,6 +230,22 @@ const ClueInput = ({ onClueSubmit }) => {
           <div className="text-sm text-gray-600 dark:text-gray-300">
             {cardsRevealed} / {clueNumber === 'infinity' ? '∞' : clueNumber} cards revealed
           </div>
+          {isRevealers && (
+            <button
+              onClick={handleEndGuess}
+              className="absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full
+                 px-3 py-1.5 rounded-full
+                 bg-gray-800/60 dark:bg-gray-200/60 
+                 text-white dark:text-black 
+                 font-semibold
+                 shadow-md hover:opacity-90
+                 text-xs sm:text-sm
+                 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="End your team's turn"
+            >
+              End Guess
+            </button>
+          )}
         </div>
       ) : (
         <></>
