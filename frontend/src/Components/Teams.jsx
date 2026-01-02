@@ -15,6 +15,7 @@ const Teams = ({ onDataReceived }) => {
   const [joinedTitle, setJoinedTitle] = useState('');
 
   const [allPlayers, setAllPlayers] = useState([]); // From API
+  const currentTurn = useSelector((state) => state.game.currentTurn);
 
   const handleJoin = (teamJoin, titleJoin) => {
     setJoinedTeam(teamJoin);
@@ -56,6 +57,16 @@ const Teams = ({ onDataReceived }) => {
   const redScore = scoresState?.red ?? scoresState?.redScore ?? scoresState?.red_team ?? scoresState?.redTeam ?? 0;
   const blueScore = scoresState?.blue ?? scoresState?.blueScore ?? scoresState?.blue_team ?? scoresState?.blueTeam ?? 0;
 
+  const TurnIndicator = ({ team }) => {
+    if (currentTurn !== team) return null;
+    const textColor = team === 'red' ? 'text-red-500 dark:text-red-400' : 'text-blue-500 dark:text-blue-400';
+    return (
+      <h3 className={`text-center text-xl font-bold mb-2 uppercase tracking-wider ${textColor}`}>
+        Current Turn
+      </h3>
+    );
+  };
+
   return (
     <JoinContext.Provider
       value={{
@@ -65,18 +76,26 @@ const Teams = ({ onDataReceived }) => {
       }}
     >
       {/* Desktop: side panels positioned vertically centered */}
-      <div className="hidden lg:block lg:absolute lg:top-1/2 lg:left-8 lg:-translate-y-1/2">
-        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} />
+      <div className="hidden lg:flex flex-col items-center lg:absolute lg:top-1/2 lg:left-8 lg:-translate-y-1/2">
+        <TurnIndicator team="red" />
+        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} isMyTurn={currentTurn === 'red'} />
       </div>
 
-      <div className="hidden lg:block lg:absolute lg:top-1/2 lg:right-8 lg:-translate-y-1/2">
-        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} />
+      <div className="hidden lg:flex flex-col items-center lg:absolute lg:top-1/2 lg:right-8 lg:-translate-y-1/2">
+        <TurnIndicator team="blue" />
+        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} isMyTurn={currentTurn === 'blue'} />
       </div>
 
       {/* Mobile / small screens: stack panels below the deck */}
       <div className="w-full flex flex-row gap-4 mt-4 lg:hidden justify-center px-4">
-        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} />
-        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} />
+        <div className="flex flex-col items-center">
+          <TurnIndicator team="red" />
+          <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} isMyTurn={currentTurn === 'red'} />
+        </div>
+        <div className="flex flex-col items-center">
+          <TurnIndicator team="blue" />
+          <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} isMyTurn={currentTurn === 'blue'} />
+        </div>
       </div>
     </JoinContext.Provider>
   );
