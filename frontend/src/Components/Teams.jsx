@@ -60,11 +60,7 @@ const Teams = ({ onDataReceived }) => {
   const TurnIndicator = ({ team }) => {
     if (currentTurn !== team) return null;
     const textColor = team === 'red' ? 'text-red-500 dark:text-red-400' : 'text-blue-500 dark:text-blue-400';
-    return (
-      <h3 className={`text-center text-xl font-bold mb-2 uppercase tracking-wider ${textColor}`}>
-        Current Turn
-      </h3>
-    );
+    return <h3 className={`text-center text-xl font-bold mb-2 uppercase tracking-wider ${textColor}`}>Current Turn</h3>;
   };
 
   return (
@@ -78,23 +74,47 @@ const Teams = ({ onDataReceived }) => {
       {/* Desktop: side panels positioned vertically centered */}
       <div className="hidden lg:flex flex-col items-center lg:absolute lg:top-1/2 lg:left-8 lg:-translate-y-1/2">
         <TurnIndicator team="red" />
-        <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} isMyTurn={currentTurn === 'red'} />
+        <TeamPanel
+          team="red"
+          score={redScore}
+          concealers={redConcealers}
+          revealers={redRevealers}
+          isMyTurn={currentTurn === 'red'}
+        />
       </div>
 
       <div className="hidden lg:flex flex-col items-center lg:absolute lg:top-1/2 lg:right-8 lg:-translate-y-1/2">
         <TurnIndicator team="blue" />
-        <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} isMyTurn={currentTurn === 'blue'} />
+        <TeamPanel
+          team="blue"
+          score={blueScore}
+          concealers={blueConcealers}
+          revealers={blueRevealers}
+          isMyTurn={currentTurn === 'blue'}
+        />
       </div>
 
       {/* Mobile / small screens: stack panels below the deck */}
       <div className="w-full flex flex-row gap-4 mt-4 lg:hidden justify-center px-4">
         <div className="flex flex-col items-center">
           <TurnIndicator team="red" />
-          <TeamPanel team="red" score={redScore} concealers={redConcealers} revealers={redRevealers} isMyTurn={currentTurn === 'red'} />
+          <TeamPanel
+            team="red"
+            score={redScore}
+            concealers={redConcealers}
+            revealers={redRevealers}
+            isMyTurn={currentTurn === 'red'}
+          />
         </div>
         <div className="flex flex-col items-center">
           <TurnIndicator team="blue" />
-          <TeamPanel team="blue" score={blueScore} concealers={blueConcealers} revealers={blueRevealers} isMyTurn={currentTurn === 'blue'} />
+          <TeamPanel
+            team="blue"
+            score={blueScore}
+            concealers={blueConcealers}
+            revealers={blueRevealers}
+            isMyTurn={currentTurn === 'blue'}
+          />
         </div>
       </div>
     </JoinContext.Provider>

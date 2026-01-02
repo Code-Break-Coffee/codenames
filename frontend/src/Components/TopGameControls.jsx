@@ -1,7 +1,6 @@
 import { useSelector } from 'react-redux';
 
 const TopGameControls = ({ isCreator, onStartNewGame }) => {
-
   return (
     <div
       className="
@@ -34,7 +33,6 @@ const TopGameControls = ({ isCreator, onStartNewGame }) => {
           Start New Game
         </button>
       )}
-      
     </div>
   );
 };
