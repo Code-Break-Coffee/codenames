@@ -205,18 +205,23 @@ const ClueInput = ({ onClueSubmit }) => {
             </select>
             <button
               type="submit"
-              className="h-12 w-12 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-opacity-90 transition-opacity duration-300 shadow-md"
+              className="h-12 w-12 flex items-center justify-center rounded-full text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transform transition-all duration-300 shadow-md hover:scale-105"
               disabled={!clueWord.trim()}
               title="Submit Clue"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
+                fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={3}
+                strokeWidth={2}
                 stroke="currentColor"
                 className="w-6 h-6"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                />
               </svg>
             </button>
           </form>

@@ -1,6 +1,6 @@
 import PlayerList from './PlayerList';
 
-const TeamPanel = ({ team, score, concealers, revealers }) => {
+const TeamPanel = ({ team, score, concealers, revealers, isMyTurn }) => {
   const colorClasses =
     team === 'red'
       ? {
@@ -8,7 +8,7 @@ const TeamPanel = ({ team, score, concealers, revealers }) => {
           border: 'border-red-600 dark:border-red-400',
           text: 'text-red-500 dark:text-red-400',
           headerText: 'text-white',
-          ring: 'ring-red-500 dark:ring-red-400',
+          ring: 'ring-red-500/50 dark:ring-red-400/50',
           shadow: 'shadow-red-500/50 dark:shadow-red-700/50',
         }
       : {
@@ -16,16 +16,17 @@ const TeamPanel = ({ team, score, concealers, revealers }) => {
           border: 'border-blue-600 dark:border-blue-400',
           text: 'text-blue-500 dark:text-blue-400',
           headerText: 'text-white',
-          ring: 'ring-blue-500 dark:ring-blue-400',
+          ring: 'ring-blue-500/50 dark:ring-blue-400/50',
           shadow: 'shadow-blue-500/50 dark:shadow-blue-700/50',
         };
 
   return (
     <div
       className={`
-        w-64 p-6 rounded-[30px] shadow-2xl transition-colors duration-500
+        w-64 p-6 rounded-[30px] shadow-2xl transition-all duration-500
         dark:bg-black/40 bg-white/40 text-sidebar-foreground border border-sidebar-border
         ${colorClasses.shadow} overflow-hidden h-auto max-h-[80vh]
+        ${isMyTurn ? `ring-1 ${colorClasses.ring}` : ''}
       `}
     >
       {/* Team Header */}
