@@ -20,7 +20,11 @@ const persistConfig = {
   key: 'root',
   storage,
   // whitelist the slices you want persisted, or omit to persist all
-  whitelist: ['cards', 'ui'],
+  // SECURITY NOTE:
+  // Do NOT persist `cards` to localStorage. It contains full card details
+  // including the hidden team/assassin assignments, which are visible to anyone
+  // with DevTools access. Persist only safe UI preferences/state.
+  whitelist: ['ui'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
