@@ -391,7 +391,7 @@ const Deck = () => {
       );
       // After animation, reveal the card
       setTimeout(() => {
-        const card = cards.find(c => c.id === cardId);
+        const card = cards.find((c) => c.id === cardId);
         if (card) {
           if (card.team === 'assassin') {
             playSound('lose');

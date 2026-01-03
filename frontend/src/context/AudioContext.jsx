@@ -19,7 +19,7 @@ const sounds = {
   lose: new Audio(loseSound),
 };
 
-Object.values(sounds).forEach(sound => {
+Object.values(sounds).forEach((sound) => {
   sound.load();
   sound.volume = 0.2;
 });
@@ -39,45 +39,43 @@ export const AudioProvider = ({ children }) => {
 
   const playBGM = useCallback(() => {
     if (!isMuted && bgmRef.current) {
-      bgmRef.current.play().catch(error => {
+      bgmRef.current.play().catch((error) => {
         console.warn('BGM autoplay was prevented.', error);
       });
       setBgmStarted(true);
     }
   }, [isMuted]);
-  
+
   useEffect(() => {
     if (bgmRef.current) {
-        if(isMuted) {
-            bgmRef.current.pause();
-        } else {
-            if (bgmRef.current.paused && bgmStarted) {
-                // If BGM was paused due to mute, resume it.
-                // This will not start it on initial load.
-                bgmRef.current.play().catch(e => console.warn("BGM resume failed", e));
-            }
+      if (isMuted) {
+        bgmRef.current.pause();
+      } else {
+        if (bgmRef.current.paused && bgmStarted) {
+          // If BGM was paused due to mute, resume it.
+          // This will not start it on initial load.
+          bgmRef.current.play().catch((e) => console.warn('BGM resume failed', e));
         }
+      }
     }
   }, [isMuted, bgmStarted]);
 
   const playSound = useCallback((soundName) => {
     if (sounds[soundName]) {
       sounds[soundName].currentTime = 0;
-      sounds[soundName].play().catch(error => console.warn(`Sound ${soundName} failed to play:`, error));
+      sounds[soundName].play().catch((error) => console.warn(`Sound ${soundName} failed to play:`, error));
     }
   }, []);
 
-
-  const value = useMemo(() => ({
-    isMuted,
-    setIsMuted,
-    playSound,
-    playBGM,
-  }), [isMuted, playSound, playBGM]);
-
-  return (
-    <AudioContext.Provider value={value}>
-      {children}
-    </AudioContext.Provider>
+  const value = useMemo(
+    () => ({
+      isMuted,
+      setIsMuted,
+      playSound,
+      playBGM,
+    }),
+    [isMuted, playSound, playBGM]
   );
+
+  return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
 };
