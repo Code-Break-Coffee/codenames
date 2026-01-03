@@ -14,6 +14,7 @@ import { updatePlayers } from '../store/slices/playersSlice';
 import { setCurrentTurn } from '../store/slices/gameSlice';
 import socket from '../socket';
 import { DeckCard } from './DeckCard';
+import AudioControl from './AudioControl';
 import ThemeToggle from './ThemeToggle';
 import Teams from './Teams';
 import ClueInput from './ClueInput';
@@ -24,9 +25,11 @@ import API_URL from '../apiConfig';
 import { setCards } from '../store/slices/cardsSlice';
 import { updateScores } from '../store/slices/scoreSlice';
 import TopGameControls from './TopGameControls';
+import { useAudio } from '../context/AudioContext.jsx';
 const ANIMATION_DURATION = 700; // ms - match CSS animation length
 
 const Deck = () => {
+  const { playSound, playBGM } = useAudio();
   const dispatch = useDispatch();
   const { gameId } = useParams();
   const cards = useSelector((state) => state.cards?.cards ?? []);
@@ -49,6 +52,7 @@ const Deck = () => {
   const wrapperRef = useRef(null);
   const [scale, setScale] = useState(1);
   const handleTeamData = (team, title) => {
+    playBGM();
     setJoinedTeam(team);
     setJoinedTitle(title);
     // Store in localStorage so ClueInput can access it
@@ -101,6 +105,7 @@ const Deck = () => {
     const blueJustHitZero = prev.blue > 0 && now.blue === 0;
 
     if (redJustHitZero || blueJustHitZero) {
+      playSound('win');
       const winner = redJustHitZero ? 'red' : 'blue';
       const WIN_OVERLAY_MS = 3500;
 
@@ -195,6 +200,11 @@ const Deck = () => {
     dispatch(setPendingReveal({ id: card.id, pending: true }));
     // reveal immediately (optimistic UI)
     setTimeout(() => {
+      if (card.team === 'assassin') {
+        playSound('lose');
+      } else {
+        playSound('cardReveal');
+      }
       dispatch({ type: 'cards/revealLocal', payload: { id: card.id, revealed: true } });
       dispatch(clickCard({ id: card.id, word: card.word, team: card.team, gameId }));
       // Server will use socket.id to identify the revealer; no need to send socketId from client
@@ -223,6 +233,7 @@ const Deck = () => {
       return;
     }
 
+    playSound('cardClick');
     dispatch(toggleConfirmTarget(cardId));
     // Log which local player clicked and emit a UI-only selection event
     const myName = localStorage.getItem('nickname') || 'Anonymous';
@@ -380,6 +391,14 @@ const Deck = () => {
       );
       // After animation, reveal the card
       setTimeout(() => {
+        const card = cards.find((c) => c.id === cardId);
+        if (card) {
+          if (card.team === 'assassin') {
+            playSound('lose');
+          } else {
+            playSound('cardReveal');
+          }
+        }
         dispatch(revealLocal({ id: cardId, revealed: true }));
       }, ANIMATION_DURATION);
     });
@@ -422,6 +441,7 @@ const Deck = () => {
     socket.on('turnSwitched', ({ currentTurn }) => {
       // If we've already declared a winner, ignore turn switch overlays
       if (finalWinner) return;
+      playSound('turnSwitch');
       console.log(`🔄 Turn switched to ${currentTurn}`);
       dispatch(setCurrentTurn(currentTurn));
       // Reset clickedBy for all cards locally so selection chips clear on turn change
@@ -518,10 +538,7 @@ const Deck = () => {
     <>
       <div className="relative w-screen h-screen flex flex-col items-center justify-center dark:bg-gradient-to-r dark:from-black dark:via-purple-950 dark:to-black bg-gradient-to-r from-indigo-200 via-white to-sky-200 overflow-auto">
         {/* Persistent turn badge (shows from first render and updates on turn change) */}
-        <TopGameControls
-          isCreator={isCreator}
-          onStartNewGame={handleStartNewGame}
-        />
+        <TopGameControls isCreator={isCreator} onStartNewGame={handleStartNewGame} />
 
         <div className="deck flex flex-col items-center justify-center gap-4 w-full">
           <div
@@ -581,6 +598,7 @@ const Deck = () => {
         </div>
       </div>
 
+      <AudioControl />
       <ThemeToggle />
 
       {/* Brief overlay for brief clue announcement (Concealers, Spectators) */}

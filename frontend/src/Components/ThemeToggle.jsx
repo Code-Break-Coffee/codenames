@@ -30,7 +30,7 @@ export default function ThemeToggle() {
       onClick={() => setDark((d) => !d)}
       aria-pressed={dark}
       title="Toggle theme"
-      className="p-2 rounded bg-gray-200 dark:bg-gray-700 absolute right-[10px] top-[10px] hover:cursor-pointer"
+      className="p-2 rounded bg-gray-200 dark:bg-gray-700 absolute right-[10px] top-[10px] hover:cursor-pointer z-[10]"
     >
       {dark ? '🌙' : '☀️'}
     </button>
