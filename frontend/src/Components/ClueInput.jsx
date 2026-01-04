@@ -126,9 +126,6 @@ const ClueInput = ({ onClueSubmit }) => {
         setClueWord('');
         setClueNumber('1');
         setCardsRevealed(0);
-
-        // Emit switchTurn event
-        socket.emit('switchTurn', { gameId });
         // Clear persisted active clue when the clue expires
         if (typeof window !== 'undefined') {
           localStorage.removeItem('activeClueWord');
@@ -173,6 +170,16 @@ const ClueInput = ({ onClueSubmit }) => {
   const isRoleConcealer = normalizedRole.startsWith('conceal') || normalizedRole === 'spymaster';
   const isConcealers = isRoleConcealer && normalizedTeam && normalizedTeam === normalizedTurn;
 
+  // Treat there being an "active clue" as: either local state has it (from socket)
+  // or Redux UI state has it (hydrated from API in Deck).
+  // Only treat a clue as active when it has been actually submitted
+  // (isSubmitted) or when the UI has hydrated an active clue from the server
+  // (ui.clueDisplayActive + ui.lastClue.word). Do NOT use local clueWord
+  // content alone, to avoid the input disappearing immediately upon typing.
+  const hasActiveClue =
+    !!isSubmitted ||
+    (!!ui?.clueDisplayActive && !!ui?.lastClue?.word);
+
   const isRoleRevealer = normalizedRole.startsWith('reveal');
   const isRevealers = isRoleRevealer && normalizedTeam && normalizedTeam === normalizedTurn;
 
@@ -180,9 +187,14 @@ const ClueInput = ({ onClueSubmit }) => {
     console.log('ClueWord:', clueWord);
   }, []);
 
+  // Display values: prefer local submitted values, otherwise fall back to
+  // hydrated Redux UI clue (from Deck API/socket).
+  const displayClueWord = (clueWord && clueWord.trim()) ? clueWord : (ui?.lastClue?.word || '');
+  const displayClueNumber = (clueNumber && clueNumber.trim()) ? clueNumber : (ui?.lastClue?.number || '1');
+
   return (
     <div>
-      {!isSubmitted && isConcealers ? (
+      {!hasActiveClue && isConcealers ? (
         <div className="w-[1100px] mt-6 p-4 rounded-[30px] dark:bg-black/60 bg-white/70 shadow-2xl flex items-center justify-center border dark:border-white/10 border-gray-400 backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="flex items-center space-x-3 w-full justify-center">
             <input
@@ -226,15 +238,15 @@ const ClueInput = ({ onClueSubmit }) => {
             </button>
           </form>
         </div>
-      ) : clueWord ? (
+      ) : displayClueWord ? (
         <div className="text-center relative group">
           <div className="text-2xl font-bold tracking-wide text-gray-900 dark:text-white mb-2">
-            <span className="uppercase">{clueWord}</span>{' '}
-            <span className="text-primary font-extrabold">({clueNumber === 'infinity' ? '∞' : clueNumber})</span>
+            <span className="uppercase">{displayClueWord}</span>{' '}
+            <span className="text-primary font-extrabold">({displayClueNumber === 'infinity' ? '∞' : displayClueNumber})</span>
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            {cardsRevealed} / {clueNumber === 'infinity' ? '∞' : clueNumber} cards revealed
-          </div>
+          {/* <div className="text-sm text-gray-600 dark:text-gray-300">
+            {cardsRevealed} / {displayClueNumber === 'infinity' ? '∞' : displayClueNumber} cards revealed
+          </div> */}
           {isRevealers && (
             <button
               onClick={handleEndGuess}

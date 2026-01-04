@@ -76,7 +76,13 @@ function handleSocketEvents(io, socket) {
       console.log(`✅ Turn ended by player ${player.name} in game ${gameId}`);
       
       const newTurn = game.currentTurn === "red" ? "blue" : "red";
-      await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn, turnGuessesLeft: 0 } });
+      await Game.findByIdAndUpdate(gameId, {
+        $set: {
+          currentTurn: newTurn,
+          turnGuessesLeft: 0,
+          activeClue: { word: null, number: null, submittedBy: null, submittedAt: null },
+        },
+      });
 
       // Clear clickedBy arrays on all cards
       const g = await Game.findById(gameId);
@@ -171,7 +177,15 @@ function handleSocketEvents(io, socket) {
       const winner = currentTurnLower === 'red' ? 'blue' : 'red';
 
       // Persist final scores and mark game finished
-      await Game.findByIdAndUpdate(gameId, { $set: { ...updated_score, turnGuessesLeft: 0, finished: true, winner } });
+      await Game.findByIdAndUpdate(gameId, {
+        $set: {
+          ...updated_score,
+          turnGuessesLeft: 0,
+          activeClue: { word: null, number: null, submittedBy: null, submittedAt: null },
+          finished: true,
+          winner,
+        },
+      });
 
   // Broadcast the revealed card and final scores (include clickedBy)
   io.to(gameId).emit("cardRevealed", { cardId, updated_score, guessesLeft: 0, cardsRevealedThisTurn: turnCardCounts[gameId], clickedBy: (card && card.clickedBy) ? card.clickedBy : [] });
@@ -208,7 +222,12 @@ function handleSocketEvents(io, socket) {
     // If guessesLeft is 0, switch turn immediately
     if (guessesLeft === 0) {
       const newTurn = game.currentTurn === "red" ? "blue" : "red";
-      await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn } });
+      await Game.findByIdAndUpdate(gameId, {
+        $set: {
+          currentTurn: newTurn,
+          activeClue: { word: null, number: null, submittedBy: null, submittedAt: null },
+        },
+      });
       // Clear clickedBy arrays on all cards when the turn switches
       try {
         const g = await Game.findById(gameId);
@@ -260,7 +279,13 @@ function handleSocketEvents(io, socket) {
   if (isNeutralWhite || (isTeamColor && revealedColor !== currentTurn)) {
         // Opponent card revealed -> switch turn now
         const newTurn = currentTurn === 'red' ? 'blue' : 'red';
-        await Game.findByIdAndUpdate(gameId, { $set: { currentTurn: newTurn, turnGuessesLeft: 0 } });
+        await Game.findByIdAndUpdate(gameId, {
+          $set: {
+            currentTurn: newTurn,
+            turnGuessesLeft: 0,
+            activeClue: { word: null, number: null, submittedBy: null, submittedAt: null },
+          },
+        });
         // Clear clickedBy arrays on all cards when the turn switches (opponent card revealed)
         try {
           const g2 = await Game.findById(gameId);
@@ -430,7 +455,20 @@ function clueSubmitted(io,socket){
       let clueCount = clueData.number;
       if (clueCount === 'infinity') clueCount = 99;
       clueCount = Number(clueCount);
-      await Game.findByIdAndUpdate(clueData.gameId, { $set: { turnGuessesLeft: clueCount } });
+      await Game.findByIdAndUpdate(
+        clueData.gameId,
+        {
+          $set: {
+            turnGuessesLeft: clueCount,
+            activeClue: {
+              word: clueData.word ?? null,
+              number: clueData.number ?? null,
+              submittedBy: clueData.nickname ?? null,
+              submittedAt: new Date(),
+            },
+          },
+        }
+      );
       
       // Emit to the specific game room, not globally
       if (clueData.gameId) {
