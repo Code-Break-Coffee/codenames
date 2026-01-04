@@ -17,8 +17,8 @@ const uiSlice = createSlice({
     },
     hideOverlay: (state) => {
       state.overlayActive = false;
-      // Also clear lastClue to avoid stale clue data appearing in later overlays
-      state.lastClue = null;
+      // Do not clear lastClue here; keep the active clue in state so other
+      // components (e.g., Deck for card selection) can still read it.
     },
     showClueDisplay: (state, action) => {
       state.clueDisplayActive = true;

@@ -227,7 +227,8 @@ const Deck = () => {
       return;
     }
 
-    // Require a clue to be present before Revealers may click
+    // Require a clue to be present before Revealers may click.
+    // Redux-only: rely on ui.lastClue populated by API hydration or socket.
     if (!lastClue || !lastClue.word) {
       console.warn('❌ Cannot select cards: no clue submitted yet');
       return;
@@ -276,6 +277,38 @@ const Deck = () => {
         // Initialize currentTurn from game document
         if (res.data.currentTurn) {
           dispatch(setCurrentTurn(res.data.currentTurn));
+        }
+
+        // Fetch active clue from backend via dedicated endpoint so we can hydrate
+        // clue UI even when a client reloads/rejoins.
+        try {
+          const clueRes = await axios.get(`${API_URL}/api/active_clue/${gameId}`);
+          const activeClue = clueRes?.data?.activeClue;
+          if (activeClue && activeClue.word) {
+            const cluePayload = { word: activeClue.word, number: activeClue.number, gameId };
+            // Always persist the active clue into UI state so other components
+            // (like ClueInput) can reliably detect that a clue exists.
+            dispatch(showClueDisplay(cluePayload));
+
+            // Also persist in localStorage to guard against any Redux state
+            // resets (e.g., hideOverlay clearing lastClue) so Revealers can
+            // still select cards.
+            try {
+              localStorage.setItem('activeClueWord', String(activeClue.word || ''));
+              localStorage.setItem('activeClueNumber', String(activeClue.number || '1'));
+            } catch {}
+
+            // Only show the brief overlay for non-Revealers.
+            if (localStorage.getItem('joinedTitle') !== 'Revealers') {
+              dispatch(showOverlay(cluePayload));
+              setTimeout(() => dispatch(hideOverlay()), 1500);
+            }
+          } else {
+            dispatch(hideClueDisplay());
+          }
+        } catch (e) {
+          // If the endpoint fails, fall back to clearing clue UI to avoid stale state.
+          dispatch(hideClueDisplay());
         }
       } catch (err) {
         console.error('Failed to fetch game:', err);
@@ -433,6 +466,9 @@ const Deck = () => {
           console.log('');
         }
         setFinalWinner(null);
+      // Reset any persisted clue UI on a fresh game
+      dispatch(hideClueDisplay());
+      dispatch(hideOverlay());
       } catch (err) {
         console.error('Failed to apply gameReset', err);
       }

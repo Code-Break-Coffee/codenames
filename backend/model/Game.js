@@ -28,6 +28,15 @@ const gameSchema = new mongoose.Schema({
     // Number of guesses left in the current turn (set by clue, decremented by card click)
     turnGuessesLeft: { type: Number, default: 0 },
 
+  // Persist the currently active clue so clients can restore UI after reload.
+  // Cleared on turn switch / reset.
+  activeClue: {
+    word: { type: String, default: null },
+    number: { type: mongoose.Schema.Types.Mixed, default: null },
+    submittedBy: { type: String, default: null },
+    submittedAt: { type: Date, default: null },
+  },
+
   redScore: { type: Number, default: 9 },
   blueScore: { type: Number, default: 8 },
 

@@ -82,6 +82,7 @@ const reset_game = async (req, res) => {
           blueScore: newTurn==='blue' ? 9 : 8,
           currentTurn: newTurn,
           turnGuessesLeft: 0,
+          activeClue: { word: null, number: null, submittedBy: null, submittedAt: null },
           finished: false,
           winner: null,
           players:[]
@@ -133,6 +134,22 @@ const getTurnAndScores=async(req,res)=>{
   }
 }
 
+// Return the currently active clue for a game (if any)
+// Useful for clients that reload/rejoin and need to restore clue UI.
+const getActiveClue = async (req, res) => {
+  try {
+    const gameId = req.params.id;
+    const game = await Game.findById(gameId);
+    if (!game) return res.status(404).json({ message: 'Game not found' });
 
+    return res.status(200).json({
+      activeClue: game.activeClue || { word: null, number: null },
+      turnGuessesLeft: typeof game.turnGuessesLeft === 'number' ? game.turnGuessesLeft : 0,
+      currentTurn: game.currentTurn,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
-module.exports={getCards,genrate_game,reset_game,getPlayers,getTurnAndScores};
+module.exports={getCards,genrate_game,reset_game,getPlayers,getTurnAndScores,getActiveClue};
